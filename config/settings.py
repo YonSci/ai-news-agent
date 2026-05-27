@@ -48,10 +48,58 @@ TIKTOK_DISABLE_COMMENT = _env_bool("TIKTOK_DISABLE_COMMENT", default=False)
 TIKTOK_DISABLE_DUET = _env_bool("TIKTOK_DISABLE_DUET", default=False)
 TIKTOK_DISABLE_STITCH = _env_bool("TIKTOK_DISABLE_STITCH", default=False)
 
+# GitHub API (optional; improves rate limits)
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+
 # Content Settings
 MAX_STORIES_PER_DAY = 5
 TARGET_VIDEO_LENGTH = 45  # seconds
 BRAND_NAME = "AI Daily"
+
+# News dashboard sources (all free / public)
+NEWS_RSS_FEEDS = {
+    "openai": "https://openai.com/index/rss.xml",
+    "anthropic": "https://www.anthropic.com/news/rss.xml",
+    "google_deepmind": "https://deepmind.google/discover/blog/rss.xml",
+    "techcrunch_ai": "https://techcrunch.com/tag/artificial-intelligence/feed/",
+    "ars_technica_ai": "https://arstechnica.com/tag/artificial-intelligence/feed/",
+}
+
+NEWS_COMPANY_PAGES = {
+    "openai": "https://openai.com/news/",
+    "anthropic": "https://www.anthropic.com/news",
+    "google_deepmind": "https://deepmind.google/discover/blog/",
+}
+
+NEWS_HN_KEYWORDS = [
+    "ai",
+    "artificial intelligence",
+    "llm",
+    "openai",
+    "anthropic",
+    "deepmind",
+    "claude",
+    "codex",
+    "cursor",
+    "machine learning",
+]
+
+NEWS_GITHUB_RELEASE_QUERIES = [
+    {"label": "Claude Code", "query": "claude code in:name,description"},
+    {"label": "OpenAI Codex", "query": "codex openai in:name,description"},
+    {"label": "Cursor", "query": "cursor ai in:name,description"},
+    {"label": "AI Coding Tools", "query": "ai coding in:name,description"},
+]
+
+NEWS_GITHUB_RELEASE_FEEDS = {
+    "OpenAI Python": "https://github.com/openai/openai-python/releases.atom",
+    "Anthropic SDK": "https://github.com/anthropics/anthropic-sdk-python/releases.atom",
+    "Google Gen AI": "https://github.com/googleapis/python-genai/releases.atom",
+    "Hugging Face Transformers": "https://github.com/huggingface/transformers/releases.atom",
+    "Microsoft AutoGen": "https://github.com/microsoft/autogen/releases.atom",
+}
+
+NEWS_MAX_PER_SOURCE = 10
 
 # Video resolution (9:16 for Shorts/TikTok)
 VIDEO_WIDTH = 1080

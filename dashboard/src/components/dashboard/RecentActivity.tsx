@@ -19,10 +19,10 @@ const typeConfig = {
 
 export function RecentActivity() {
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white">Recent Activity</CardTitle>
-        <p className="text-sm text-slate-400">Latest pipeline updates</p>
+        <CardTitle className="text-foreground">Recent Activity</CardTitle>
+        <p className="text-sm text-muted-foreground">Latest pipeline updates</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -31,15 +31,15 @@ export function RecentActivity() {
             const Icon = config.icon;
             return (
               <div key={activity.id} className="flex items-start gap-3">
-                <div className="p-1.5 rounded-lg bg-slate-800 mt-0.5">
+                <div className="p-1.5 rounded-lg bg-muted mt-0.5">
                   <Icon size={14} className={config.color} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-200 truncate">{activity.title}</p>
+                  <p className="text-sm text-foreground truncate">{activity.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-slate-500">{activity.time}</span>
+                    <span className="text-xs text-muted-foreground">{activity.time}</span>
                     {activity.platform && (
-                      <Badge variant="secondary" className="text-[10px] bg-slate-800 text-slate-400">
+                      <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">
                         {activity.platform}
                       </Badge>
                     )}

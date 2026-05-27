@@ -16,10 +16,10 @@ interface Props {
 
 export function ContentCard({ item }: Props) {
   return (
-    <Card className="bg-slate-800 border-slate-700 hover:border-slate-600 transition-all">
+    <Card className="bg-card border-border hover:border-border/80 transition-all">
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between">
-          <Badge variant="secondary" className="text-[10px] bg-slate-700 text-slate-300">
+          <Badge variant="secondary" className="text-[10px] bg-muted text-foreground">
             {platformLabels[item.platform]}
           </Badge>
           {item.viralScore >= 7 && (
@@ -28,11 +28,11 @@ export function ContentCard({ item }: Props) {
             </Badge>
           )}
         </div>
-        <h4 className="text-sm font-medium text-white line-clamp-2">{item.title}</h4>
-        <p className="text-xs text-slate-500 line-clamp-2">{item.summary}</p>
+        <h4 className="text-sm font-medium text-foreground line-clamp-2">{item.title}</h4>
+        <p className="text-xs text-muted-foreground line-clamp-2">{item.summary}</p>
         <div className="flex items-center justify-between">
           <StatusBadge status={item.status} />
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-muted-foreground">
             {new Date(item.createdAt).toLocaleDateString()}
           </span>
         </div>

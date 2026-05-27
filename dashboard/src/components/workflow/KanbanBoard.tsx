@@ -41,7 +41,7 @@ export function KanbanBoard({ items, onDragEnd, isLoading }: Props) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className="h-96 bg-slate-800" />
+          <Skeleton key={i} className="h-96 bg-muted" />
         ))}
       </div>
     );
@@ -61,8 +61,8 @@ export function KanbanBoard({ items, onDragEnd, isLoading }: Props) {
             <div key={column.id} className="flex flex-col">
               <div className="flex items-center gap-2 mb-3 px-1">
                 <Icon size={16} className={column.color} />
-                <h3 className="font-semibold text-sm text-slate-300">{column.title}</h3>
-                <Badge variant="secondary" className="ml-auto bg-slate-800 text-slate-400">
+                <h3 className="font-semibold text-sm text-foreground">{column.title}</h3>
+                <Badge variant="secondary" className="ml-auto bg-muted text-muted-foreground">
                   {columnItems.length}
                 </Badge>
               </div>
@@ -74,7 +74,7 @@ export function KanbanBoard({ items, onDragEnd, isLoading }: Props) {
                     {...provided.droppableProps}
                     className={cn(
                       'flex-1 rounded-lg p-2 min-h-[500px] transition-colors',
-                      snapshot.isDraggingOver ? 'bg-slate-800/80' : 'bg-slate-900/50'
+                      snapshot.isDraggingOver ? 'bg-muted/80' : 'bg-muted/40'
                     )}
                   >
                     <ScrollArea className="h-full">
@@ -87,7 +87,7 @@ export function KanbanBoard({ items, onDragEnd, isLoading }: Props) {
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 className={cn(
-                                  'bg-slate-800 border-slate-700 hover:border-slate-600 transition-all',
+                                  'bg-card border-border hover:border-border/80 transition-all',
                                   snapshot.isDragging && 'shadow-xl ring-2 ring-purple-500'
                                 )}
                               >
@@ -95,7 +95,7 @@ export function KanbanBoard({ items, onDragEnd, isLoading }: Props) {
                                   <div className="flex items-start justify-between mb-2">
                                     <Badge 
                                       variant="secondary" 
-                                      className="text-[10px] bg-slate-700 text-slate-300"
+                                      className="text-[10px] bg-muted text-foreground"
                                     >
                                       {platformIcons[item.platform]}
                                     </Badge>
@@ -105,13 +105,13 @@ export function KanbanBoard({ items, onDragEnd, isLoading }: Props) {
                                       </Badge>
                                     )}
                                   </div>
-                                  <h4 className="text-sm font-medium text-white line-clamp-2 mb-1">
+                                  <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-1">
                                     {item.title}
                                   </h4>
-                                  <p className="text-xs text-slate-500 line-clamp-2">
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
                                     {item.summary}
                                   </p>
-                                  <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                                     <span>{new Date(item.createdAt).toLocaleDateString()}</span>
                                   </div>
                                 </CardContent>

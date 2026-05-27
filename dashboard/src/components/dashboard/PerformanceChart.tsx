@@ -29,10 +29,10 @@ export function PerformanceChart() {
   ];
 
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white">Performance Overview</CardTitle>
-        <p className="text-sm text-slate-400">Views, likes, and shares over time</p>
+        <CardTitle className="text-foreground">Performance Overview</CardTitle>
+        <p className="text-sm text-muted-foreground">Views, likes, and shares over time</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

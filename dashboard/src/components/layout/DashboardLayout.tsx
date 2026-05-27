@@ -8,7 +8,7 @@ export function DashboardLayout() {
   const { sidebarOpen } = useDashboardStore();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-background text-foreground">
       <Sidebar />
       <TopBar />
       

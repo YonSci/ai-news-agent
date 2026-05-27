@@ -5,21 +5,23 @@ import { TopicList } from '@/components/trending/TopicList';
 import { ViralScoreChart } from '@/components/trending/ViralScoreChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePreferencesStore } from '@/store/usePreferencesStore';
 
 export function TrendingPage() {
+  const refreshIntervalMinutes = usePreferencesStore((state) => state.refreshIntervalMinutes);
   const { data: topics, isLoading } = useQuery({
     queryKey: ['trending-topics'],
     queryFn: () => trendingApi.getTopics().then((res) => res.data),
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: refreshIntervalMinutes * 60 * 1000,
   });
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-48 bg-slate-800" />
+        <Skeleton className="h-8 w-48 bg-muted" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-96 bg-slate-800" />
-          <Skeleton className="h-96 bg-slate-800" />
+          <Skeleton className="h-96 bg-muted" />
+          <Skeleton className="h-96 bg-muted" />
         </div>
       </div>
     );
@@ -28,18 +30,53 @@ export function TrendingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Trending Topics</h1>
-        <p className="text-slate-400 mt-1">
-          Real-time AI/ML trending topics across the web
+        <h1 className="text-2xl font-bold text-foreground">News Signals</h1>
+        <p className="text-muted-foreground mt-1">
+          Fast view of AI themes and momentum across your monitored sources
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Top Theme</CardTitle>
+            <p className="text-sm text-muted-foreground">Most mentioned in the latest feed</p>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-foreground">{topics?.[0]?.keyword || 'None yet'}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{topics?.[0]?.category || 'Waiting for data'}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Tracked Sources</CardTitle>
+            <p className="text-sm text-muted-foreground">Unique source domains represented</p>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-foreground">{topics?.length || 0}</p>
+            <p className="mt-2 text-sm text-muted-foreground">Themes derived from real news items</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Momentum</CardTitle>
+            <p className="text-sm text-muted-foreground">Average growth across themes</p>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-foreground">
+              {topics && topics.length ? Math.round(topics.reduce((sum, topic) => sum + topic.growth, 0) / topics.length) : 0}%
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">Positive and negative motion combined</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Heatmap */}
-        <Card className="lg:col-span-2 bg-slate-900 border-slate-800">
+        <Card className="lg:col-span-2 bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-white">Topic Heatmap</CardTitle>
-            <p className="text-sm text-slate-400">Volume vs Growth across categories</p>
+            <CardTitle className="text-foreground">Signal Heatmap</CardTitle>
+            <p className="text-sm text-muted-foreground">Volume versus growth across AI categories</p>
           </CardHeader>
           <CardContent>
             <TrendingHeatmap topics={topics || []} />
@@ -47,10 +84,10 @@ export function TrendingPage() {
         </Card>
 
         {/* Viral Score Distribution */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-white">Viral Potential</CardTitle>
-            <p className="text-sm text-slate-400">Score distribution</p>
+            <CardTitle className="text-foreground">Relevance Distribution</CardTitle>
+            <p className="text-sm text-muted-foreground">How strongly current topics score across the feed</p>
           </CardHeader>
           <CardContent>
             <ViralScoreChart topics={topics || []} />
@@ -59,9 +96,9 @@ export function TrendingPage() {
       </div>
 
       {/* Topic List */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white">Active Topics</CardTitle>
+          <CardTitle className="text-foreground">Active Themes</CardTitle>
         </CardHeader>
         <CardContent>
           <TopicList topics={topics || []} />

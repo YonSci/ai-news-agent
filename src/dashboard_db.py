@@ -5,6 +5,13 @@ import sqlite3
 from config.settings import DB_PATH
 
 
+def _ensure_columns(conn: sqlite3.Connection, table_name: str, columns: dict[str, str]) -> None:
+    existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()}
+    for column_name, column_type in columns.items():
+        if column_name not in existing:
+            conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
+
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -14,9 +21,17 @@ def init_db():
             id TEXT PRIMARY KEY,
             title TEXT,
             source TEXT,
+            source_type TEXT,
+            source_url TEXT,
             viral_score INTEGER,
+            relevance_score INTEGER,
             summary TEXT,
             link TEXT,
+            published_at TEXT,
+            category TEXT,
+            tags TEXT,
+            dedupe_hash TEXT,
+            item_type TEXT,
             status TEXT,
             platform TEXT,
             created_at TEXT,
@@ -51,6 +66,21 @@ def init_db():
             due_date TEXT
         )
     ''')
+
+    _ensure_columns(
+        conn,
+        'content_items',
+        {
+            'source_type': 'TEXT',
+            'source_url': 'TEXT',
+            'relevance_score': 'INTEGER',
+            'published_at': 'TEXT',
+            'category': 'TEXT',
+            'tags': 'TEXT',
+            'dedupe_hash': 'TEXT',
+            'item_type': 'TEXT',
+        },
+    )
 
     conn.commit()
     conn.close()

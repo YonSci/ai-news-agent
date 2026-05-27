@@ -13,7 +13,7 @@ export function ViralScoreChart({ topics }: Props) {
 
   if (data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
+      <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
         No data available
       </div>
     );

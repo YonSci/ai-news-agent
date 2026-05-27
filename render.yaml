@@ -19,6 +19,8 @@ services:
         sync: false
       - key: REDDIT_USER_AGENT
         value: AI-News-Agent/1.0 by YourUsername
+      - key: GITHUB_TOKEN
+        sync: false
       - key: TIKTOK_AUTO_UPLOAD
         value: "0"
       - key: TIKTOK_ACCESS_TOKEN

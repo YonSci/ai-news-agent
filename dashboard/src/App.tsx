@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -9,6 +10,7 @@ import { WorkflowPage } from '@/pages/WorkflowPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { CalendarPage } from '@/pages/CalendarPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { useDashboardStore } from '@/store/useDashboardStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,6 +22,15 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const theme = useDashboardStore((state) => state.theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('light', theme === 'light');
+    root.classList.toggle('dark', theme === 'dark');
+    root.style.colorScheme = theme;
+  }, [theme]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -34,7 +45,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
-      <Toaster position="top-right" theme="dark" />
+      <Toaster position="top-right" theme={theme} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

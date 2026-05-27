@@ -1,65 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contentApi } from '@/lib/api';
-import { KanbanBoard } from '@/components/workflow/KanbanBoard';
-import type { ContentStatus } from '@/types';
+import { newsApi } from '@/lib/api';
+import { NewsQueueBoard } from '@/components/workflow/NewsQueueBoard';
+import type { NewsStatus } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import type { DropResult } from '@hello-pangea/dnd';
+import { usePreferencesStore } from '@/store/usePreferencesStore';
 
 export function WorkflowPage() {
   const queryClient = useQueryClient();
+  const refreshIntervalMinutes = usePreferencesStore((state) => state.refreshIntervalMinutes);
   
   const { data: items, isLoading } = useQuery({
-    queryKey: ['content-items'],
-    queryFn: () => contentApi.getAll().then((res) => res.data),
-    refetchInterval: 10000,
+    queryKey: ['news-queue'],
+    queryFn: () => newsApi.getAll().then((res) => res.data),
+    refetchInterval: refreshIntervalMinutes * 60 * 1000,
   });
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: ContentStatus }) =>
-      contentApi.updateStatus(id, status).then((res) => res.data),
+    mutationFn: ({ id, status }: { id: string; status: NewsStatus }) =>
+      newsApi.updateStatus(id, status).then((res) => res.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content-items'] });
-      toast.success('Status updated');
+      queryClient.invalidateQueries({ queryKey: ['news-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['news-feed'] });
+      toast.success('Story status updated');
     },
   });
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
     const { draggableId, destination } = result;
-    const newStatus = destination.droppableId as ContentStatus;
+    const newStatus = destination.droppableId as NewsStatus;
     
     updateStatus.mutate({ id: draggableId, status: newStatus });
   };
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['content-items'] });
-    toast.info('Refreshing content...');
+    queryClient.invalidateQueries({ queryKey: ['news-queue'] });
+    toast.info('Refreshing story queue...');
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Content Workflow</h1>
-          <p className="text-slate-400 mt-1">
-            Drag and drop to move content through the pipeline
+          <h1 className="text-2xl font-bold text-foreground">News Queue</h1>
+          <p className="text-muted-foreground mt-1">
+            Drag stories across statuses to triage what to watch, prioritize, or archive
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRefresh} className="border-slate-700 text-slate-300">
+          <Button variant="outline" onClick={handleRefresh} className="border-border text-foreground">
             <RefreshCw size={16} className="mr-2" />
             Refresh
-          </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            <Plus size={16} className="mr-2" />
-            New Content
           </Button>
         </div>
       </div>
 
-      <KanbanBoard 
+      <NewsQueueBoard 
         items={items || []} 
         onDragEnd={handleDragEnd}
         isLoading={isLoading}

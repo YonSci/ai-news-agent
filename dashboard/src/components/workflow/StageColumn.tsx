@@ -18,8 +18,8 @@ export function StageColumn({ id, title, icon: Icon, color, items }: Props) {
     <div className="flex flex-col">
       <div className="flex items-center gap-2 mb-3 px-1">
         <Icon size={16} className={color} />
-        <h3 className="font-semibold text-sm text-slate-300">{title}</h3>
-        <Badge variant="secondary" className="ml-auto bg-slate-800 text-slate-400">
+        <h3 className="font-semibold text-sm text-foreground">{title}</h3>
+        <Badge variant="secondary" className="ml-auto bg-muted text-muted-foreground">
           {items.length}
         </Badge>
       </div>
@@ -31,7 +31,7 @@ export function StageColumn({ id, title, icon: Icon, color, items }: Props) {
             {...provided.droppableProps}
             className={cn(
               'flex-1 rounded-lg p-2 min-h-[500px] transition-colors',
-              snapshot.isDraggingOver ? 'bg-slate-800/80' : 'bg-slate-900/50'
+              snapshot.isDraggingOver ? 'bg-muted/80' : 'bg-muted/40'
             )}
           >
             <ScrollArea className="h-full">

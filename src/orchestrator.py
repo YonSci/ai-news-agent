@@ -27,9 +27,9 @@ class Orchestrator:
         print(line.strip())
     
     def run_research(self):
-        """Stage 1: Fetch news and generate brief"""
+        """Phase 1: Fetch news and generate brief"""
         self.log("=" * 50)
-        self.log("STAGE 1: RESEARCH")
+        self.log("PHASE 1: NEWS INGESTION")
         self.log("=" * 50)
         
         try:
@@ -41,6 +41,16 @@ class Orchestrator:
         except Exception as e:
             self.log(f"FAILED: {e}")
             return None
+
+    def run_news(self):
+        """Phase 1: run only the free-source news ingestion"""
+        self.log("=" * 60)
+        self.log("STARTING NEWS INGESTION")
+        self.log("=" * 60)
+        result = self.run_research()
+        if result:
+            self.log("News ingestion complete.")
+        return result
     
     def generate_prompts(self, brief_path: str = None):
         """Stage 2: Generate script prompts for Claude/ChatGPT"""
@@ -168,6 +178,7 @@ Setup:
   2. Install deps:   pip install -r requirements.txt
 
 Commands:
+    news        - Ingest AI news from free sources and sync dashboard
   research    - Fetch news and generate brief
   prompts     - Generate script prompts from latest brief
   video       - Create video from approved script
@@ -177,6 +188,7 @@ Commands:
 
 Examples:
   python src/orchestrator.py research
+    python src/orchestrator.py news
   python src/orchestrator.py prompts
   python src/orchestrator.py video
   python src/orchestrator.py pipeline
@@ -203,6 +215,8 @@ if __name__ == "__main__":
     
     if command == "research":
         orch.run_research()
+    elif command == "news":
+        orch.run_news()
     elif command == "prompts":
         orch.generate_prompts()
     elif command == "video":

@@ -3,6 +3,7 @@ Flask API Server for React Dashboard
 Serves data from your AI News Agent files
 """
 import sys
+from collections import Counter
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -23,14 +24,155 @@ CORS(app)  # Enable CORS for React dev server
 
 init_db()
 
+TOPIC_STOPWORDS = {
+    'ai', 'news', 'company', 'release', 'releases', 'github', 'openai', 'anthropic',
+    'google', 'deepmind', 'hackernews', 'hacker news', 'techcrunch ai', 'ars technica ai',
+}
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00')).replace(tzinfo=None)
+    except ValueError:
+        return None
+
+
+def _extract_topic_tokens(title: str, tags: list[str], category: str, source: str) -> set[str]:
+    text = f"{title} {' '.join(tags)} {category} {source}".lower()
+    tracked_terms = {
+        'openai': 'OpenAI',
+        'anthropic': 'Anthropic',
+        'claude': 'Claude',
+        'gemini': 'Gemini',
+        'deepmind': 'DeepMind',
+        'codex': 'Codex',
+        'cursor': 'Cursor',
+        'agent': 'Agents',
+        'agents': 'Agents',
+        'llm': 'LLM',
+        'robotics': 'Robotics',
+        'reasoning': 'Reasoning',
+        'benchmark': 'Benchmarks',
+        'model': 'Models',
+        'sdk': 'SDKs',
+        'release': 'Releases',
+    }
+
+    tokens = set()
+    for raw_tag in tags:
+        cleaned = raw_tag.replace('_', ' ').strip()
+        lowered = cleaned.lower()
+        if cleaned and lowered not in TOPIC_STOPWORDS and len(cleaned) > 2:
+            tokens.add(cleaned.title())
+
+    for term, label in tracked_terms.items():
+        if term in text:
+            tokens.add(label)
+
+    if not tokens and category:
+        tokens.add(category)
+
+    return tokens
+
+
+def _topic_category(keyword: str, fallback: str) -> str:
+    key = keyword.lower()
+    if key in {'openai', 'anthropic', 'claude', 'gemini', 'codex', 'llm', 'models'}:
+        return 'LLM'
+    if key in {'agents', 'cursor', 'sdks', 'releases'}:
+        return 'Tooling'
+    if key in {'robotics', 'deepmind'}:
+        return 'Research'
+    return fallback or 'AI News'
+
 @app.route('/api/content', methods=['GET'])
 def get_content():
     """Get all content items"""
+    return _serialize_items(order_by='created_at DESC')
+
+
+@app.route('/api/news', methods=['GET'])
+def get_news():
+    """Get normalized AI news items"""
+    source = request.args.get('source')
+    category = request.args.get('category')
+    status = request.args.get('status')
+    keyword = (request.args.get('q') or '').strip().lower()
+    topic = (request.args.get('topic') or '').strip().lower()
+    region = (request.args.get('region') or '').strip().lower()
+    start_date = (request.args.get('startDate') or '').strip()
+    end_date = (request.args.get('endDate') or '').strip()
+
+    where = ["(item_type = 'news' OR platform = 'news')"]
+    params = []
+    if source:
+        where.append('source = ?')
+        params.append(source)
+    if category:
+        where.append('category = ?')
+        params.append(category)
+    if status:
+        where.append('status = ?')
+        params.append(status)
+    if topic and topic != 'all':
+        like_value = f'%{topic}%'
+        where.append('(LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(category) LIKE ?)')
+        params.extend([like_value, like_value, like_value, like_value])
+    if keyword:
+        like_value = f'%{keyword}%'
+        where.append('(LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(source) LIKE ?)')
+        params.extend([like_value, like_value, like_value, like_value])
+    if start_date:
+        where.append('published_at >= ?')
+        params.append(f'{start_date}T00:00:00')
+    if end_date:
+        where.append('published_at <= ?')
+        params.append(f'{end_date}T23:59:59')
+    if region and region != 'all':
+        region_label = region.replace('_', ' ')
+        like_value = f'%{region_label}%'
+        where.append('(LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(source_url) LIKE ? OR LOWER(source) LIKE ?)')
+        params.extend([like_value, like_value, like_value, like_value, like_value])
+
+    where_clause = f"WHERE {' AND '.join(where)}" if where else ''
+    return _serialize_items(order_by='published_at DESC, created_at DESC', where_clause=where_clause, params=params)
+
+
+@app.route('/api/news/<id>/status', methods=['PATCH'])
+def update_news_status(id):
+    """Update tracking status for a news item."""
+    data = request.json or {}
+    new_status = data.get('status')
+
+    allowed_statuses = {'new', 'tracked', 'ignored', 'important', 'archived'}
+    if new_status not in allowed_statuses:
+        return jsonify({'error': 'Invalid news status'}), 400
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        '''
+        UPDATE content_items
+        SET status = ?, updated_at = ?
+        WHERE id = ?
+        ''',
+        (new_status, datetime.now().isoformat(), id),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'id': id, 'status': new_status})
+
+
+def _serialize_items(order_by: str, where_clause: str = '', params: list | None = None):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    
-    c.execute('SELECT * FROM content_items ORDER BY created_at DESC')
+
+    params = params or []
+    c.execute(f'SELECT * FROM content_items {where_clause} ORDER BY {order_by}', params)
     rows = c.fetchall()
     
     items = []
@@ -39,9 +181,17 @@ def get_content():
             'id': row['id'],
             'title': row['title'],
             'source': row['source'],
+            'sourceType': row['source_type'],
+            'sourceUrl': row['source_url'],
             'viralScore': row['viral_score'],
+            'relevanceScore': row['relevance_score'],
             'summary': row['summary'],
             'link': row['link'],
+            'publishedAt': row['published_at'],
+            'category': row['category'],
+            'tags': json.loads(row['tags']) if row['tags'] else [],
+            'dedupeHash': row['dedupe_hash'],
+            'itemType': row['item_type'],
             'status': row['status'],
             'platform': row['platform'],
             'createdAt': row['created_at'],
@@ -107,44 +257,85 @@ def update_status(id):
 
 @app.route('/api/trending', methods=['GET'])
 def get_trending():
-    """Get trending topics from latest brief"""
-    briefs = sorted(BRIEFS_DIR.glob("*-brief.md"))
-    
-    if not briefs:
-        # Return mock data if no briefs
-        return jsonify([
-            {
-                'id': '1',
-                'keyword': 'GPT-5',
-                'category': 'LLM',
-                'volume': 45000,
-                'growth': 120,
-                'sentiment': 'positive',
-                'sources': ['reddit', 'hackernews'],
-                'relatedTopics': ['OpenAI', 'AGI'],
-                'lastUpdated': datetime.now().isoformat()
-            },
-            {
-                'id': '2',
-                'keyword': 'AI Video Generation',
-                'category': 'Multimodal',
-                'volume': 32000,
-                'growth': 85,
-                'sentiment': 'positive',
-                'sources': ['arxiv', 'twitter'],
-                'relatedTopics': ['Sora', 'Runway'],
-                'lastUpdated': datetime.now().isoformat()
-            }
-        ])
-    
-    # Parse latest brief
-    latest = briefs[-1].read_text(encoding='utf-8')
-    
-    # Simple parsing - in production, use proper markdown parser
+    """Build trending topics from current news items in the dashboard DB."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute(
+        '''
+        SELECT title, source, category, tags, published_at, relevance_score, viral_score
+        FROM content_items
+        WHERE item_type = 'news' OR platform = 'news'
+        ORDER BY published_at DESC, created_at DESC
+        '''
+    )
+    rows = c.fetchall()
+    conn.close()
+
+    if not rows:
+        return jsonify([])
+
+    now = datetime.now()
+    aggregates: dict[str, dict] = {}
+
+    for row in rows:
+        tags = json.loads(row['tags']) if row['tags'] else []
+        title = row['title'] or ''
+        source = row['source'] or 'unknown'
+        category = row['category'] or 'AI News'
+        published_at = _parse_iso_datetime(row['published_at']) or now
+        score = row['relevance_score'] or row['viral_score'] or 5
+        tokens = _extract_topic_tokens(title, tags, category, source)
+
+        for token in tokens:
+            entry = aggregates.setdefault(token, {
+                'count': 0,
+                'recent': 0,
+                'score_total': 0,
+                'sources': set(),
+                'related': Counter(),
+                'category': category,
+                'lastUpdated': published_at.isoformat(),
+            })
+            entry['count'] += 1
+            entry['score_total'] += score
+            entry['sources'].add(source)
+            entry['category'] = _topic_category(token, entry['category'])
+            if published_at >= now - timedelta(days=1):
+                entry['recent'] += 1
+            if published_at.isoformat() > entry['lastUpdated']:
+                entry['lastUpdated'] = published_at.isoformat()
+
+            for related in tokens:
+                if related != token:
+                    entry['related'][related] += 1
+
     topics = []
-    # ... parse logic here ...
-    
-    return jsonify(topics)
+    for keyword, entry in aggregates.items():
+        previous = max(entry['count'] - entry['recent'], 0)
+        if previous > 0:
+            growth = round(((entry['recent'] - previous) / previous) * 100)
+        else:
+            growth = min(200, entry['recent'] * 25)
+
+        avg_score = entry['score_total'] / max(entry['count'], 1)
+        sentiment = 'positive' if avg_score >= 8 else 'neutral' if avg_score >= 6 else 'negative'
+        volume = int(entry['count'] * 120 + avg_score * 25)
+
+        topics.append({
+            'id': f"topic_{keyword.lower().replace(' ', '_')}",
+            'keyword': keyword,
+            'category': entry['category'],
+            'volume': volume,
+            'growth': growth,
+            'sentiment': sentiment,
+            'sources': sorted(entry['sources']),
+            'relatedTopics': [name for name, _ in entry['related'].most_common(3)],
+            'lastUpdated': entry['lastUpdated'],
+        })
+
+    topics.sort(key=lambda item: (item['volume'], item['growth']), reverse=True)
+    return jsonify(topics[:15])
 
 @app.route('/api/projects', methods=['GET'])
 def get_projects():
@@ -191,34 +382,40 @@ def get_dashboard_stats():
     """Get dashboard statistics"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    
-    # Total content
-    c.execute('SELECT COUNT(*) FROM content_items')
-    total = c.fetchone()[0]
-    
-    # Published this week
-    week_ago = (datetime.now() - timedelta(days=7)).isoformat()
-    c.execute('SELECT COUNT(*) FROM content_items WHERE status = ? AND created_at > ?', 
-              ('published', week_ago))
-    published_week = c.fetchone()[0]
-    
-    # Average viral score
-    c.execute('SELECT AVG(viral_score) FROM content_items')
-    avg_viral = round(c.fetchone()[0] or 0, 1)
-    
-    # Pending review
-    c.execute('SELECT COUNT(*) FROM content_items WHERE status = ?', ('review',))
-    pending = c.fetchone()[0]
+
+    news_where = "WHERE (item_type = 'news' OR platform = 'news')"
+
+    c.execute(f'SELECT COUNT(*) FROM content_items {news_where}')
+    total_stories = c.fetchone()[0]
+
+    day_ago = (datetime.now() - timedelta(days=1)).isoformat()
+    c.execute(
+        f'SELECT COUNT(*) FROM content_items {news_where} AND published_at >= ?',
+        (day_ago,),
+    )
+    new_today = c.fetchone()[0]
+
+    c.execute(f'SELECT AVG(COALESCE(relevance_score, viral_score)) FROM content_items {news_where}')
+    avg_relevance = round(c.fetchone()[0] or 0, 1)
+
+    c.execute(f"SELECT COUNT(*) FROM content_items {news_where} AND status = 'tracked'")
+    tracked = c.fetchone()[0]
+
+    c.execute(f"SELECT COUNT(*) FROM content_items {news_where} AND status = 'important'")
+    important = c.fetchone()[0]
+
+    c.execute(f"SELECT COUNT(*) FROM content_items {news_where} AND status = 'ignored'")
+    ignored = c.fetchone()[0]
     
     conn.close()
-    
+
     return jsonify({
-        'totalContent': total,
-        'publishedThisWeek': published_week,
-        'avgViralScore': avg_viral,
-        'topPlatform': 'tiktok',
-        'pendingReview': pending,
-        'successRate': 85
+        'totalStories': total_stories,
+        'newToday': new_today,
+        'avgRelevanceScore': avg_relevance,
+        'trackedCount': tracked,
+        'importantCount': important,
+        'ignoredCount': ignored,
     })
 
 @app.route('/api/stats/performance', methods=['GET'])

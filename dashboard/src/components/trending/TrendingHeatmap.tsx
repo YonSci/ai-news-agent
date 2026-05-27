@@ -63,13 +63,13 @@ export function TrendingHeatmap({ topics }: Props) {
             if (active && payload && payload.length) {
               const data = payload[0].payload;
               return (
-                <div className="bg-slate-800 border border-slate-700 p-3 rounded-lg shadow-xl">
-                  <p className="font-semibold text-white">{data.name}</p>
-                  <p className="text-sm text-slate-400">{data.category}</p>
+                <div className="bg-popover border border-border p-3 rounded-lg shadow-xl">
+                  <p className="font-semibold text-foreground">{data.name}</p>
+                  <p className="text-sm text-muted-foreground">{data.category}</p>
                   <div className="mt-2 space-y-1 text-xs">
-                    <p className="text-slate-300">Volume: {data.x.toLocaleString()}</p>
-                    <p className="text-slate-300">Growth: {data.y > 0 ? '+' : ''}{data.y}%</p>
-                    <p className="text-slate-300">
+                    <p className="text-muted-foreground">Volume: {data.x.toLocaleString()}</p>
+                    <p className="text-muted-foreground">Growth: {data.y > 0 ? '+' : ''}{data.y}%</p>
+                    <p className="text-muted-foreground">
                       Sentiment:{' '}
                       <span style={{ color: getColor(data.sentiment) }}>
                         {data.sentiment}

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ContentItem, ContentStatus, TrendingTopic, Project, DashboardStats } from '@/types';
+import type { ContentItem, ContentStatus, TrendingTopic, Project, DashboardStats, NewsItem, NewsStatus } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -19,6 +19,23 @@ export const contentApi = {
   updateStatus: (id: string, status: ContentStatus) =>
     api.patch<ContentItem>(`/content/${id}/status`, { status }),
   delete: (id: string) => api.delete(`/content/${id}`),
+};
+
+// News API
+export const newsApi = {
+  getAll: (params?: {
+    source?: string;
+    category?: string;
+    status?: string;
+    q?: string;
+    topic?: string;
+    region?: string;
+    startDate?: string;
+    endDate?: string;
+  }) =>
+    api.get<NewsItem[]>('/news', { params }),
+  updateStatus: (id: string, status: NewsStatus) =>
+    api.patch<{ id: string; status: NewsStatus }>(`/news/${id}/status`, { status }),
 };
 
 // Trending API

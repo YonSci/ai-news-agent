@@ -28,38 +28,38 @@ export function NewProjectDialog({ open, onOpenChange, onSubmit, isSubmitting }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-800 text-white">
+      <DialogContent className="bg-card border-border text-foreground">
         <DialogHeader>
           <DialogTitle>New Project</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm text-slate-400">Name</label>
+            <label className="text-sm text-muted-foreground">Name</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Project name"
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
               required
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-slate-400">Description</label>
+            <label className="text-sm text-muted-foreground">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the project..."
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
               rows={3}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-slate-400">Priority</label>
+            <label className="text-sm text-muted-foreground">Priority</label>
             <Select value={priority} onValueChange={(v) => setPriority(v as Project['priority'])}>
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+              <SelectTrigger className="bg-background border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700 text-white">
+              <SelectContent className="bg-card border-border text-foreground">
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="high">High</SelectItem>
@@ -72,7 +72,7 @@ export function NewProjectDialog({ open, onOpenChange, onSubmit, isSubmitting }:
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-slate-700 text-slate-300"
+              className="border-border text-foreground"
             >
               Cancel
             </Button>

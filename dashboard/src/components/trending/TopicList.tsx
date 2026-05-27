@@ -16,16 +16,16 @@ export function TopicList({ topics }: Props) {
       {sorted.map((topic) => (
         <div
           key={topic.id}
-          className="flex items-center justify-between p-4 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-slate-600 transition-colors"
+          className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:border-border/80 transition-colors"
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-medium text-white truncate">{topic.keyword}</h3>
-              <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-300">
+              <h3 className="font-medium text-foreground truncate">{topic.keyword}</h3>
+              <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
                 {topic.category}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 mt-1 text-sm text-slate-400">
+            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
               <span>Vol: {topic.volume.toLocaleString()}</span>
               <span className="flex items-center gap-1">
                 {topic.growth > 0 ? (
@@ -57,7 +57,7 @@ export function TopicList({ topics }: Props) {
           </div>
 
           <div className="flex items-center gap-2 ml-4">
-            <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               <ExternalLink size={16} />
             </Button>
           </div>

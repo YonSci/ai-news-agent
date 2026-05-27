@@ -9,7 +9,7 @@ const config: Record<ContentStatus, { label: string; className: string }> = {
   production: { label: 'Production', className: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
   approved:   { label: 'Approved',   className: 'bg-green-500/20 text-green-400 border-green-500/30' },
   published:  { label: 'Published',  className: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  archived:   { label: 'Archived',   className: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+  archived:   { label: 'Archived',   className: 'bg-muted text-muted-foreground border-border' },
 };
 
 export function StatusBadge({ status }: { status: ContentStatus }) {

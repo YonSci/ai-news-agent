@@ -3,9 +3,17 @@ export interface ContentItem {
   id: string;
   title: string;
   source: string;
+  sourceType?: string;
+  sourceUrl?: string;
   viralScore: number;
+  relevanceScore?: number;
   summary: string;
   link: string;
+  publishedAt?: string;
+  category?: string;
+  tags?: string[];
+  dedupeHash?: string;
+  itemType?: string;
   status: ContentStatus;
   platform: Platform;
   createdAt: string;
@@ -15,6 +23,21 @@ export interface ContentItem {
   publishedUrl?: string;
   metrics?: ContentMetrics;
 }
+
+export interface NewsItem extends Omit<ContentItem, 'status' | 'platform'> {
+  sourceType: string;
+  sourceUrl: string;
+  relevanceScore: number;
+  publishedAt: string;
+  category: string;
+  tags: string[];
+  dedupeHash: string;
+  itemType: 'news';
+  status: NewsStatus;
+  platform: 'news';
+}
+
+export type NewsStatus = 'new' | 'tracked' | 'ignored' | 'important' | 'archived';
 
 export type ContentStatus = 
   | 'research' 
@@ -75,10 +98,10 @@ export interface Task {
 
 // Dashboard Stats
 export interface DashboardStats {
-  totalContent: number;
-  publishedThisWeek: number;
-  avgViralScore: number;
-  topPlatform: Platform;
-  pendingReview: number;
-  successRate: number;
+  totalStories: number;
+  newToday: number;
+  avgRelevanceScore: number;
+  trackedCount: number;
+  importantCount: number;
+  ignoredCount: number;
 }

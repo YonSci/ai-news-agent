@@ -10,7 +10,7 @@ export function TopBar() {
 
   return (
     <header
-      className={`fixed top-0 right-0 h-16 bg-slate-900/95 backdrop-blur border-b border-slate-800 z-30 transition-all duration-300 ${
+      className={`fixed top-0 right-0 h-16 bg-card/95 backdrop-blur border-b border-border z-30 transition-all duration-300 ${
         sidebarOpen ? 'left-64' : 'left-16'
       }`}
     >
@@ -18,10 +18,10 @@ export function TopBar() {
         {/* Search */}
         <div className="flex items-center gap-4 flex-1 max-w-xl">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search content, topics, projects..."
-              className="pl-10 bg-slate-800 border-slate-700 text-slate-200 placeholder:text-slate-500"
+              placeholder="Search news, companies, topics, projects..."
+              className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -32,7 +32,7 @@ export function TopBar() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="text-slate-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </Button>
@@ -40,7 +40,7 @@ export function TopBar() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative text-slate-400 hover:text-white"
+            className="relative text-muted-foreground hover:text-foreground"
           >
             <Bell size={18} />
             {unreadCount > 0 && (
@@ -50,11 +50,11 @@ export function TopBar() {
             )}
           </Button>
 
-          <div className="flex items-center gap-2 pl-3 border-l border-slate-700">
+          <div className="flex items-center gap-2 pl-3 border-l border-border">
             <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
               <User size={16} className="text-white" />
             </div>
-            <span className="text-sm text-slate-300 hidden md:block">Admin</span>
+            <span className="text-sm text-muted-foreground hidden md:block">Admin</span>
           </div>
         </div>
       </div>

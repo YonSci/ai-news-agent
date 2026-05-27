@@ -5,11 +5,14 @@ import type { Project } from '@/types';
 import { ProjectList } from '@/components/projects/ProjectList';
 import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 export function ProjectsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const queryClient = useQueryClient();
 
   const { data: projects, isLoading } = useQuery({
@@ -26,25 +29,47 @@ export function ProjectsPage() {
     },
   });
 
+  const filteredProjects = (projects || []).filter((project) => {
+    const haystack = [project.name, project.description, ...project.tags].join(' ').toLowerCase();
+    return haystack.includes(query.toLowerCase());
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Projects</h1>
-          <p className="text-slate-400 mt-1">
-            Manage your content campaigns and initiatives
+          <h1 className="text-2xl font-bold text-foreground">Projects</h1>
+          <p className="text-muted-foreground mt-1">
+            Organize investigations, watchlists, and editorial initiatives
           </p>
         </div>
-        <Button 
-          onClick={() => setIsDialogOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700"
-        >
-          <Plus size={16} className="mr-2" />
-          New Project
-        </Button>
       </div>
 
-      <ProjectList projects={projects || []} isLoading={isLoading} />
+      <Card className="bg-card border-border">
+        <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex-1 space-y-1">
+            <label className="text-sm text-muted-foreground">Search watchlists and investigations</label>
+            <div className="relative max-w-2xl">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by title, description, or tags"
+                className="pl-9 bg-background border-border text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+          <Button 
+            onClick={() => setIsDialogOpen(true)}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Plus size={16} className="mr-2" />
+            New Investigation
+          </Button>
+        </CardContent>
+      </Card>
+
+      <ProjectList projects={filteredProjects} isLoading={isLoading} />
 
       <NewProjectDialog
         open={isDialogOpen}

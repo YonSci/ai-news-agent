@@ -34,6 +34,7 @@
 - Build/Start: use `Dockerfile` (auto-detected)
 - Expose port `5000`
 - Add env vars from `.env.example`.
+- Add `GITHUB_TOKEN` if you want reliable GitHub release tracking without hitting unauthenticated rate limits.
 - Add a Persistent Disk and mount at `/app/data`.
 
 ### 3. Run pipeline jobs
@@ -86,5 +87,6 @@
 ## Important Notes
 
 - `config/client_secrets.json` (YouTube OAuth) is required only for YouTube upload.
+- `GITHUB_TOKEN` is optional but recommended for GitHub release tracking.
 - TikTok auto-upload requires approved TikTok developer app and valid access token.
 - If TikTok auto-upload is not configured, publish stage falls back to creating a manual package in `data/approved/tiktok_ready`.
