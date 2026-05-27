@@ -13,8 +13,14 @@
 - Use [render.yaml](render.yaml) at the repository root.
 - It provisions:
   - a Docker web service for the API
-  - a Docker background worker for the scheduler
-  - a shared persistent disk mounted at `/app/data`
+  - a persistent disk mounted at `/app/data`
+  - all required environment variable placeholders
+
+### Scheduler note (important)
+
+- This blueprint intentionally deploys API only.
+- Render persistent disks are service-scoped, so API and worker should not assume they can share one writable local disk.
+- Run pipeline jobs manually for now (`python src/orchestrator.py pipeline`) or move shared state to managed services (Postgres + object storage) before adding a cloud worker.
 
 ### 1. Push repo to GitHub
 
@@ -30,11 +36,13 @@
 - Add env vars from `.env.example`.
 - Add a Persistent Disk and mount at `/app/data`.
 
-### 3. Deploy scheduler on Render
+### 3. Run pipeline jobs
 
-- Create a **Background Worker** from same repo.
-- Start command: `python src/orchestrator.py schedule`
-- Use same env vars and same mounted disk path if available.
+- Use manual runs while API is deployed:
+  - `python src/orchestrator.py pipeline`
+  - `python src/orchestrator.py video`
+  - `python src/orchestrator.py publish`
+- Optional: add a worker later after moving from local disk sharing to managed storage.
 
 ### 4. Deploy frontend on Vercel
 
