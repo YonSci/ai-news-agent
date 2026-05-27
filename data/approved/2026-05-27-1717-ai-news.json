@@ -1,0 +1,36 @@
+{
+  "source_script": "data\\approved\\2026-05-27-short-script.md",
+  "output_video": "D:\\projects\\ai-news-agent\\data\\approved\\2026-05-27-1717-ai-news.mp4",
+  "created_at": "2026-05-27T17:19:44.653921",
+  "fps": 24,
+  "resolution": {
+    "width": 1080,
+    "height": 1920
+  },
+  "sections": [
+    {
+      "type": "HOOK",
+      "text": "AI changed overnight.",
+      "duration": 3,
+      "word_count": 3
+    },
+    {
+      "type": "SETUP",
+      "text": "One update matters now.",
+      "duration": 3,
+      "word_count": 4
+    },
+    {
+      "type": "REVEAL",
+      "text": "Prompts are getting smarter.",
+      "duration": 3,
+      "word_count": 4
+    },
+    {
+      "type": "CTA",
+      "text": "Follow for daily AI.",
+      "duration": 3,
+      "word_count": 4
+    }
+  ]
+}

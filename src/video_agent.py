@@ -1,8 +1,11 @@
 """
 Video Agent - Creates videos using free tools (MoviePy, PIL, gTTS)
 """
+from __future__ import annotations
+
 import os
 import re
+import json
 import numpy as np
 from pathlib import Path
 from typing import List, Dict
@@ -10,10 +13,15 @@ from datetime import datetime
 from config.settings import *
 
 try:
-    from moviepy.editor import *
+    from moviepy import (
+        VideoClip,
+        AudioFileClip,
+        TextClip,
+        CompositeVideoClip,
+        concatenate_videoclips,
+    )
     from PIL import Image, ImageDraw, ImageFont
     from gtts import gTTS
-    from pydub import AudioSegment
     MOVIEPY_AVAILABLE = True
 except ImportError:
     MOVIEPY_AVAILABLE = False
@@ -43,7 +51,7 @@ class VideoAgent:
             audio_path = self._generate_tts(section['text'], section['type'])
             audio = AudioFileClip(audio_path)
             visual = self._generate_visual(section, audio.duration)
-            clips.append(visual.set_audio(audio))
+            clips.append(self._attach_audio(visual, audio))
         
         # Combine all sections
         final_video = concatenate_videoclips(clips, method="compose")
@@ -68,6 +76,28 @@ class VideoAgent:
             threads=4,
             preset='fast'
         )
+
+        metadata = {
+            'source_script': str(script_path),
+            'output_video': str(output_path),
+            'created_at': datetime.now().isoformat(),
+            'fps': FPS,
+            'resolution': {
+                'width': self.width,
+                'height': self.height,
+            },
+            'sections': [
+                {
+                    'type': section['type'],
+                    'text': section['text'],
+                    'duration': section['duration'],
+                    'word_count': section['word_count'],
+                }
+                for section in sections
+            ],
+        }
+        meta_path = output_path.with_suffix('.json')
+        meta_path.write_text(json.dumps(metadata, indent=2), encoding='utf-8')
         
         # Cleanup
         for clip in clips:
@@ -76,6 +106,11 @@ class VideoAgent:
         
         print(f"Video created: {output_path}")
         return str(output_path)
+
+    def _attach_audio(self, clip: VideoClip, audio: AudioFileClip) -> VideoClip:
+        if hasattr(clip, 'with_audio'):
+            return clip.with_audio(audio)
+        return clip.set_audio(audio)
     
     def _parse_script(self, script_text: str) -> List[Dict]:
         """Parse script into timed sections"""
@@ -107,6 +142,7 @@ class VideoAgent:
         
         # Speed up slightly for energy
         try:
+            from pydub import AudioSegment
             audio = AudioSegment.from_mp3(str(temp_path))
             audio = audio.speedup(playback_speed=1.05)
             audio.export(str(temp_path), format="mp3")
@@ -208,18 +244,36 @@ class VideoAgent:
             words = section['text'].split()[:5]
             caption = ' '.join(words) + '...'
             
-            txt = TextClip(
-                caption,
-                fontsize=55,
-                color='yellow',
-                stroke_color='black',
-                stroke_width=2,
-                font='Arial-Bold',
-                size=(self.width - 100, None),
-                method='caption'
-            ).set_position(('center', self.height - 250))\
-             .set_start(current_time)\
-             .set_duration(section['duration'])
+            try:
+                txt = TextClip(
+                    text=caption,
+                    font_size=55,
+                    color='yellow',
+                    stroke_color='black',
+                    stroke_width=2,
+                    font='Arial-Bold',
+                    size=(self.width - 100, None),
+                    method='caption'
+                )
+            except Exception:
+                txt = TextClip(
+                    text=caption,
+                    font_size=55,
+                    color='yellow',
+                    stroke_color='black',
+                    stroke_width=2,
+                    size=(self.width - 100, None),
+                    method='caption'
+                )
+
+            if hasattr(txt, 'with_position'):
+                txt = txt.with_position(('center', self.height - 250))
+                txt = txt.with_start(current_time)
+                txt = txt.with_duration(section['duration'])
+            else:
+                txt = txt.set_position(('center', self.height - 250))
+                txt = txt.set_start(current_time)
+                txt = txt.set_duration(section['duration'])
             
             txt_clips.append(txt)
             current_time += section['duration']

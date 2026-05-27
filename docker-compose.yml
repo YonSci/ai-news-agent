@@ -1,0 +1,29 @@
+services:
+  api:
+    build: .
+    container_name: ai-news-api
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    container_name: ai-news-scheduler
+    env_file:
+      - .env
+    command: ["python", "src/orchestrator.py", "schedule"]
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    depends_on:
+      - api
+    restart: unless-stopped
+    profiles:
+      - worker

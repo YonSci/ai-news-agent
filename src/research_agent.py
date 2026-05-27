@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict
 from config.settings import *
+from src.dashboard_store import sync_research_stories
 
 try:
     import praw
@@ -149,6 +150,12 @@ class ResearchAgent:
         # Sort by viral score
         all_stories.sort(key=lambda x: x['viral_score'], reverse=True)
         top_stories = all_stories[:MAX_STORIES_PER_DAY]
+
+        try:
+            synced = sync_research_stories(top_stories)
+            print(f"Dashboard sync: {synced} real stories saved")
+        except Exception as e:
+            print(f"Dashboard sync warning: {e}")
         
         # Generate brief
         date_str = datetime.now().strftime('%Y-%m-%d')

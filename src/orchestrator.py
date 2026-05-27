@@ -3,9 +3,13 @@ Orchestrator - Main controller for the AI News Agent pipeline
 """
 import sys
 import time
-import schedule
 from datetime import datetime
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from config.settings import *
 
 
@@ -139,6 +143,11 @@ class Orchestrator:
     
     def schedule_daily(self, hour: int = 6, minute: int = 0):
         """Schedule daily runs using schedule library"""
+        try:
+            import schedule
+        except ImportError as e:
+            raise RuntimeError("'schedule' is required only for the schedule command. Install it with: pip install schedule") from e
+
         schedule.every().day.at(f"{hour:02d}:{minute:02d}").do(self.run_pipeline)
         
         self.log(f"Scheduled daily runs at {hour:02d}:{minute:02d}")

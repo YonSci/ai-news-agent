@@ -1,0 +1,22 @@
+.git
+.gitignore
+.vscode
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov
+
+# Frontend build artifacts
+dashboard/node_modules
+dashboard/dist
+
+# Runtime outputs
+logs/*.log
+data/assets/*.mp3
+data/assets/*.mp4
+data/posted/*.json

@@ -2,10 +2,13 @@
 Publish Agent - Uploads to YouTube (free API) and prepares TikTok packages
 """
 import os
+import re
 import json
 import pickle
+import requests
 from pathlib import Path
 from typing import Dict, List
+from datetime import datetime
 from config.settings import *
 
 try:
@@ -113,6 +116,82 @@ class TikTokPublisher:
     def __init__(self):
         self.ready_dir = APPROVED_DIR / "tiktok_ready"
         self.ready_dir.mkdir(exist_ok=True)
+        self.api_base_url = TIKTOK_API_BASE_URL.rstrip('/')
+        self.access_token = TIKTOK_ACCESS_TOKEN
+
+    def is_auto_configured(self) -> bool:
+        return bool(self.access_token)
+
+    def _auth_headers(self) -> Dict[str, str]:
+        if not self.access_token:
+            raise RuntimeError("Missing TIKTOK_ACCESS_TOKEN")
+        return {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json',
+        }
+
+    def _api_post(self, endpoint: str, payload: Dict) -> Dict:
+        url = f"{self.api_base_url}{endpoint}"
+        response = requests.post(url, headers=self._auth_headers(), json=payload, timeout=60)
+        try:
+            body = response.json()
+        except Exception:
+            body = {'raw': response.text}
+
+        if response.status_code >= 400:
+            raise RuntimeError(f"TikTok API error {response.status_code}: {body}")
+        if isinstance(body, dict) and body.get('error'):
+            raise RuntimeError(f"TikTok API returned error: {body['error']}")
+        return body if isinstance(body, dict) else {'data': body}
+
+    def upload_video_auto(self, video_path: str, title: str, description: str,
+                          hashtags: List[str] = None) -> Dict:
+        """Upload video through TikTok Content Posting API (requires approved app + token)."""
+        video = Path(video_path)
+        if not video.exists():
+            raise FileNotFoundError(f"Video not found: {video}")
+
+        hashtag_text = ' '.join(f"#{tag}" for tag in (hashtags or []))
+        caption = f"{description}\n{hashtag_text}".strip()[:2200]
+        video_size = video.stat().st_size
+
+        init_payload = {
+            'post_info': {
+                'title': (title or 'AI News')[:90],
+                'description': caption,
+                'privacy_level': TIKTOK_PRIVACY_LEVEL,
+                'disable_comment': TIKTOK_DISABLE_COMMENT,
+                'disable_duet': TIKTOK_DISABLE_DUET,
+                'disable_stitch': TIKTOK_DISABLE_STITCH,
+            },
+            'source_info': {
+                'source': 'FILE_UPLOAD',
+                'video_size': video_size,
+                'chunk_size': video_size,
+                'total_chunk_count': 1,
+            },
+        }
+
+        init_resp = self._api_post('/v2/post/publish/video/init/', init_payload)
+        data = init_resp.get('data', init_resp)
+
+        upload_url = data.get('upload_url') or data.get('video_upload_url')
+        publish_id = data.get('publish_id') or data.get('publishId')
+        if not upload_url:
+            raise RuntimeError(f"TikTok init response missing upload_url: {init_resp}")
+
+        with open(video, 'rb') as f:
+            upload_resp = requests.put(upload_url, data=f, timeout=300)
+        if upload_resp.status_code >= 400:
+            raise RuntimeError(
+                f"TikTok upload failed {upload_resp.status_code}: {upload_resp.text[:500]}"
+            )
+
+        return {
+            'publish_id': publish_id,
+            'status': 'upload_completed',
+            'init_response': init_resp,
+        }
     
     def prepare_package(self, video_path: str, title: str, description: str,
                        hashtags: List[str] = None) -> str:
@@ -169,16 +248,44 @@ class PublishingOrchestrator:
             results['youtube'] = 'yt_api_not_installed'
         
         # TikTok package
-        try:
-            self.tiktok.prepare_package(
-                video_path=video_path,
-                title=metadata.get('tiktok_title', 'AI News'),
-                description=metadata.get('tiktok_description', '#AI #ML'),
-                hashtags=metadata.get('hashtags')
-            )
-            results['tiktok'] = 'package_created'
-        except Exception as e:
-            results['tiktok_error'] = str(e)
+        tiktok_title = metadata.get('tiktok_title', 'AI News')
+        tiktok_desc = metadata.get('tiktok_description', '#AI #ML')
+        tiktok_tags = metadata.get('hashtags') or metadata.get('tags')
+
+        if TIKTOK_AUTO_UPLOAD and self.tiktok.is_auto_configured():
+            try:
+                auto_result = self.tiktok.upload_video_auto(
+                    video_path=video_path,
+                    title=tiktok_title,
+                    description=tiktok_desc,
+                    hashtags=tiktok_tags,
+                )
+                results['tiktok'] = 'auto_upload_started'
+                if auto_result.get('publish_id'):
+                    results['tiktok_publish_id'] = auto_result['publish_id']
+            except Exception as e:
+                results['tiktok_error'] = str(e)
+                try:
+                    self.tiktok.prepare_package(
+                        video_path=video_path,
+                        title=tiktok_title,
+                        description=tiktok_desc,
+                        hashtags=tiktok_tags,
+                    )
+                    results['tiktok_fallback'] = 'package_created'
+                except Exception as package_error:
+                    results['tiktok_fallback_error'] = str(package_error)
+        else:
+            try:
+                self.tiktok.prepare_package(
+                    video_path=video_path,
+                    title=tiktok_title,
+                    description=tiktok_desc,
+                    hashtags=tiktok_tags,
+                )
+                results['tiktok'] = 'package_created'
+            except Exception as e:
+                results['tiktok_error'] = str(e)
         
         return results
 
@@ -186,4 +293,4 @@ class PublishingOrchestrator:
 if __name__ == "__main__":
     print("PublishAgent ready.")
     print("YouTube: Requires client_secrets.json from Google Cloud Console")
-    print("TikTok: Manual upload or apply for API at developers.tiktok.com")
+    print("TikTok: Set TIKTOK_AUTO_UPLOAD=1 + TIKTOK_ACCESS_TOKEN for automatic upload")

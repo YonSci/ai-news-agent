@@ -5,6 +5,13 @@ Windows-compatible paths using pathlib
 import os
 from pathlib import Path
 
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 # Base directory (project root)
 BASE_DIR = Path(__file__).parent.parent
 
@@ -15,6 +22,7 @@ DRAFTS_DIR = DATA_DIR / "drafts"
 APPROVED_DIR = DATA_DIR / "approved"
 POSTED_DIR = DATA_DIR / "posted"
 ASSETS_DIR = DATA_DIR / "assets"
+DB_PATH = DATA_DIR / "dashboard.db"
 
 # Logs
 LOGS_DIR = BASE_DIR / "logs"
@@ -30,6 +38,15 @@ REDDIT_USER_AGENT = "AI-News-Agent/1.0 by YourUsername"
 
 # YouTube API
 YOUTUBE_CLIENT_SECRETS_FILE = BASE_DIR / "config" / "client_secrets.json"
+
+# TikTok API
+TIKTOK_AUTO_UPLOAD = _env_bool("TIKTOK_AUTO_UPLOAD", default=False)
+TIKTOK_ACCESS_TOKEN = os.getenv("TIKTOK_ACCESS_TOKEN", "")
+TIKTOK_API_BASE_URL = os.getenv("TIKTOK_API_BASE_URL", "https://open.tiktokapis.com")
+TIKTOK_PRIVACY_LEVEL = os.getenv("TIKTOK_PRIVACY_LEVEL", "SELF_ONLY")
+TIKTOK_DISABLE_COMMENT = _env_bool("TIKTOK_DISABLE_COMMENT", default=False)
+TIKTOK_DISABLE_DUET = _env_bool("TIKTOK_DISABLE_DUET", default=False)
+TIKTOK_DISABLE_STITCH = _env_bool("TIKTOK_DISABLE_STITCH", default=False)
 
 # Content Settings
 MAX_STORIES_PER_DAY = 5
