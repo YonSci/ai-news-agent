@@ -12,6 +12,9 @@ interface DashboardState {
   setCurrentPage: (page: string) => void;
   addNotification: (notification: Notification) => void;
   dismissNotification: (id: string) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
 }
 
@@ -40,6 +43,17 @@ export const useDashboardStore = create<DashboardState>()(
         set((state) => ({ 
           notifications: state.notifications.filter((n) => n.id !== id) 
         })),
+      markNotificationRead: (id) =>
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
+          ),
+        })),
+      markAllNotificationsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        })),
+      clearNotifications: () => set({ notifications: [] }),
       setTheme: (theme) => set({ theme }),
     }),
     {
