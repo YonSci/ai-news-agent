@@ -59,13 +59,43 @@
   - `GET /api/content`
   - `GET /api/stats/dashboard`
 
-## Option B: Railway (backend + worker) + Vercel
+## Option B: Railway (backend) + Netlify or Vercel
 
-- Deploy backend using Dockerfile.
-- Add a second Railway service for worker with command:
-  - `python src/orchestrator.py schedule`
-- Attach persistent volume for `/app/data`.
-- Deploy dashboard on Vercel with `VITE_API_URL` set.
+### Files already prepared in this repo
+
+- Use [Dockerfile](Dockerfile) for the backend container.
+- Use [railway.json](railway.json) for Railway healthcheck configuration.
+
+### 1. Create the Railway backend service
+
+- In Railway, create a new project from your GitHub repo.
+- Deploy the root service from this repository.
+- Railway will auto-detect [Dockerfile](Dockerfile) and build the API service.
+
+### 2. Configure Railway service settings
+
+- Generate a public Railway domain in Networking.
+- Add a persistent volume mounted at `/app/data`.
+- Add environment variables from [.env.example](.env.example).
+- Add `GITHUB_TOKEN` if you want better GitHub API rate limits.
+
+### 3. Validate the backend
+
+- Open `https://<your-railway-domain>/api/stats/dashboard`
+- Open `https://<your-railway-domain>/api/news`
+
+### 4. Point the frontend to Railway
+
+- In Netlify or Vercel, set:
+  - `VITE_API_URL=https://<your-railway-domain>/api`
+- Trigger a redeploy of the frontend so the value is baked into the build.
+
+### 5. Optional worker follow-up
+
+- If you later want scheduled pipeline runs, add a second Railway service or cron job.
+- Start command for that worker path can be one of:
+  - `python src/orchestrator.py news`
+  - `python src/orchestrator.py pipeline`
 
 ## Option C: Single VM (DigitalOcean/AWS Lightsail)
 

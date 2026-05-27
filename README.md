@@ -21,6 +21,7 @@ Daily AI/ML news automation for YouTube Shorts and TikTok.
 
 - Full production guide: [DEPLOYMENT.md](DEPLOYMENT.md)
 - Docker API entrypoint: [Dockerfile](Dockerfile)
+- Railway backend config: [railway.json](railway.json)
 - Compose stack: [docker-compose.yml](docker-compose.yml)
 - Backend env template: [.env.example](.env.example)
 - Frontend prod env template: [dashboard/.env.production.example](dashboard/.env.production.example)
