@@ -8,6 +8,7 @@ import type {
   NewsItem,
   NewsStatus,
   HydrationHealth,
+  CoverageEvent,
 } from '@/types';
 
 const DEFAULT_LOCAL_API_URL = 'http://localhost:5000/api';
@@ -81,4 +82,11 @@ export const statsApi = {
 
 export const healthApi = {
   getHydration: () => api.get<HydrationHealth>('/health/hydration'),
+};
+
+export const coverageApi = {
+  getAll: () => api.get<CoverageEvent[]>('/coverage/events'),
+  create: (data: Partial<CoverageEvent>) => api.post('/coverage/events', data),
+  update: (id: string, data: Partial<CoverageEvent>) => api.patch(`/coverage/events/${id}`, data),
+  delete: (id: string) => api.delete(`/coverage/events/${id}`),
 };

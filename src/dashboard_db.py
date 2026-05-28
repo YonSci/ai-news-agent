@@ -67,6 +67,19 @@ def init_db():
         )
     ''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS coverage_events (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            detail TEXT,
+            event_type TEXT,
+            starts_at TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at TEXT,
+            updated_at TEXT
+        )
+    ''')
+
     _ensure_columns(
         conn,
         'content_items',

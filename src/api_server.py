@@ -203,6 +203,75 @@ def _topic_category(keyword: str, fallback: str) -> str:
         return 'Research'
     return fallback or 'AI News'
 
+
+DEFAULT_COVERAGE_EVENTS = [
+    {
+        'id': 'coverage_openai_watch',
+        'title': 'OpenAI release watch',
+        'detail': 'Monitor product and model updates',
+        'event_type': 'release_watch',
+        'starts_at': '2026-01-01T10:00:00',
+        'status': 'scheduled',
+    },
+    {
+        'id': 'coverage_anthropic_checkin',
+        'title': 'Anthropic and Claude check-in',
+        'detail': 'Track blog posts and SDK releases',
+        'event_type': 'checkin',
+        'starts_at': '2026-01-02T14:30:00',
+        'status': 'scheduled',
+    },
+    {
+        'id': 'coverage_weekly_review',
+        'title': 'Weekly theme review',
+        'detail': 'Review tracked and important stories',
+        'event_type': 'review',
+        'starts_at': '2026-01-03T09:00:00',
+        'status': 'scheduled',
+    },
+]
+
+
+def _serialize_coverage_event(row: sqlite3.Row) -> dict:
+    return {
+        'id': row['id'],
+        'title': row['title'],
+        'detail': row['detail'] or '',
+        'eventType': row['event_type'] or 'monitoring',
+        'startsAt': row['starts_at'],
+        'status': row['status'] or 'scheduled',
+        'createdAt': row['created_at'],
+        'updatedAt': row['updated_at'],
+    }
+
+
+def _seed_coverage_events_if_empty(conn: sqlite3.Connection) -> None:
+    c = conn.cursor()
+    c.execute('SELECT COUNT(*) FROM coverage_events')
+    count = c.fetchone()[0]
+    if count:
+        return
+
+    now = datetime.now().isoformat()
+    for event in DEFAULT_COVERAGE_EVENTS:
+        c.execute(
+            '''
+            INSERT INTO coverage_events
+            (id, title, detail, event_type, starts_at, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''',
+            (
+                event['id'],
+                event['title'],
+                event['detail'],
+                event['event_type'],
+                event['starts_at'],
+                event['status'],
+                now,
+                now,
+            ),
+        )
+
 @app.route('/api/content', methods=['GET'])
 def get_content():
     """Get all content items"""
@@ -454,6 +523,101 @@ def get_trending():
 
     topics.sort(key=lambda item: (item['volume'], item['growth']), reverse=True)
     return jsonify(topics[:15])
+
+
+@app.route('/api/coverage/events', methods=['GET'])
+def get_coverage_events():
+    """Get coverage calendar events for monitoring and review planning."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    _seed_coverage_events_if_empty(conn)
+
+    c = conn.cursor()
+    c.execute('SELECT * FROM coverage_events ORDER BY starts_at ASC, created_at ASC')
+    rows = c.fetchall()
+    conn.commit()
+    conn.close()
+
+    return jsonify([_serialize_coverage_event(row) for row in rows])
+
+
+@app.route('/api/coverage/events', methods=['POST'])
+def create_coverage_event():
+    """Create a new coverage calendar event."""
+    data = request.json or {}
+    title = (data.get('title') or '').strip()
+    starts_at = (data.get('startsAt') or '').strip()
+    detail = (data.get('detail') or '').strip()
+    event_type = (data.get('eventType') or 'monitoring').strip()
+    status = (data.get('status') or 'scheduled').strip()
+
+    if not title or not starts_at:
+        return jsonify({'error': 'title and startsAt are required'}), 400
+
+    event_id = f"coverage_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+    now = datetime.now().isoformat()
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        '''
+        INSERT INTO coverage_events
+        (id, title, detail, event_type, starts_at, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (event_id, title, detail, event_type, starts_at, status, now, now),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'id': event_id, 'message': 'created'}), 201
+
+
+@app.route('/api/coverage/events/<id>', methods=['PATCH'])
+def update_coverage_event(id):
+    """Update an existing coverage event."""
+    data = request.json or {}
+
+    allowed_updates = {
+        'title': 'title',
+        'detail': 'detail',
+        'eventType': 'event_type',
+        'startsAt': 'starts_at',
+        'status': 'status',
+    }
+
+    sets = []
+    values = []
+    for payload_key, db_column in allowed_updates.items():
+        if payload_key in data:
+            sets.append(f"{db_column} = ?")
+            values.append(data[payload_key])
+
+    if not sets:
+        return jsonify({'error': 'No valid fields to update'}), 400
+
+    sets.append('updated_at = ?')
+    values.append(datetime.now().isoformat())
+    values.append(id)
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(f"UPDATE coverage_events SET {', '.join(sets)} WHERE id = ?", values)
+    conn.commit()
+    conn.close()
+
+    return jsonify({'id': id, 'message': 'updated'})
+
+
+@app.route('/api/coverage/events/<id>', methods=['DELETE'])
+def delete_coverage_event(id):
+    """Delete a coverage event."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('DELETE FROM coverage_events WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'id': id, 'message': 'deleted'})
 
 @app.route('/api/projects', methods=['GET'])
 def get_projects():

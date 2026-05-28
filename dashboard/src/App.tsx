@@ -7,7 +7,6 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { TrendingPage } from '@/pages/TrendingPage';
 import { WorkflowPage } from '@/pages/WorkflowPage';
-import { ProjectsPage } from '@/pages/ProjectsPage';
 import { CalendarPage } from '@/pages/CalendarPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { AboutPage } from '@/pages/AboutPage';
@@ -40,7 +39,6 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/workflow" element={<WorkflowPage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/about" element={<AboutPage />} />

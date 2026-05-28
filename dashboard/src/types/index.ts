@@ -120,3 +120,14 @@ export interface HydrationHealth {
   dbPath: string;
   timestamp: string;
 }
+
+export interface CoverageEvent {
+  id: string;
+  title: string;
+  detail: string;
+  eventType: 'release_watch' | 'checkin' | 'review' | 'monitoring' | string;
+  startsAt: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | string;
+  createdAt: string;
+  updatedAt: string;
+}
