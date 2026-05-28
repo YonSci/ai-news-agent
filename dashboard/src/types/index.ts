@@ -105,3 +105,18 @@ export interface DashboardStats {
   importantCount: number;
   ignoredCount: number;
 }
+
+export interface HydrationHealth {
+  state: 'ok' | 'empty' | 'critical';
+  newsRowCount: number;
+  lastHydrationAttempt: string | null;
+  snapshot: {
+    exists: boolean;
+    path: string;
+    sizeBytes: number;
+    updatedAt: string | null;
+    error?: string;
+  };
+  dbPath: string;
+  timestamp: string;
+}

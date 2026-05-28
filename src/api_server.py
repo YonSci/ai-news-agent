@@ -125,6 +125,27 @@ def _hydrate_news_if_empty() -> None:
         _hydration_lock.release()
 
 
+def _snapshot_metadata() -> dict:
+    """Return snapshot diagnostics for hydration visibility."""
+    exists = _NEWS_SNAPSHOT_PATH.exists()
+    metadata = {
+        'exists': exists,
+        'path': str(_NEWS_SNAPSHOT_PATH),
+        'sizeBytes': 0,
+        'updatedAt': None,
+    }
+    if not exists:
+        return metadata
+
+    try:
+        stats = _NEWS_SNAPSHOT_PATH.stat()
+        metadata['sizeBytes'] = int(stats.st_size)
+        metadata['updatedAt'] = datetime.fromtimestamp(stats.st_mtime).isoformat()
+    except Exception as exc:
+        metadata['error'] = str(exc)
+    return metadata
+
+
 def _parse_iso_datetime(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -515,6 +536,28 @@ def get_dashboard_stats():
         'trackedCount': tracked,
         'importantCount': important,
         'ignoredCount': ignored,
+    })
+
+
+@app.route('/api/health/hydration', methods=['GET'])
+def get_hydration_health():
+    """Expose hydration and snapshot state for production diagnostics."""
+    news_count = _get_news_row_count()
+    snapshot = _snapshot_metadata()
+
+    state = 'ok'
+    if news_count == 0:
+        state = 'empty'
+    if news_count == 0 and not snapshot.get('exists'):
+        state = 'critical'
+
+    return jsonify({
+        'state': state,
+        'newsRowCount': news_count,
+        'lastHydrationAttempt': _last_hydration_attempt.isoformat() if _last_hydration_attempt else None,
+        'snapshot': snapshot,
+        'dbPath': str(DB_PATH),
+        'timestamp': datetime.now().isoformat(),
     })
 
 @app.route('/api/stats/performance', methods=['GET'])

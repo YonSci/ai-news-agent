@@ -1,5 +1,14 @@
 import axios from 'axios';
-import type { ContentItem, ContentStatus, TrendingTopic, Project, DashboardStats, NewsItem, NewsStatus } from '@/types';
+import type {
+  ContentItem,
+  ContentStatus,
+  TrendingTopic,
+  Project,
+  DashboardStats,
+  NewsItem,
+  NewsStatus,
+  HydrationHealth,
+} from '@/types';
 
 const DEFAULT_LOCAL_API_URL = 'http://localhost:5000/api';
 
@@ -68,4 +77,8 @@ export const projectApi = {
 export const statsApi = {
   getDashboard: () => api.get<DashboardStats>('/stats/dashboard'),
   getPerformance: (days: number = 30) => api.get(`/stats/performance?days=${days}`),
+};
+
+export const healthApi = {
+  getHydration: () => api.get<HydrationHealth>('/health/hydration'),
 };
