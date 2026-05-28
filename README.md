@@ -1,27 +1,78 @@
-# AI News Agent
+# AI News Traker Agent
 
-Daily AI/ML news automation for YouTube Shorts and TikTok.
+A real-time dashboard tracking AI news from Anthropic, OpenAI, Google Gemini, and popular AI CLI tools.
+Aggregates content from Hacker News, GitHub Releases, and RSS feeds from free, public data sources with no API keys required.
 
-## Setup
+A modern, AI-powered news dashboard built with Next.js, React, and TypeScript.
+Visualize, filter, and personalize news from global sources with advanced analytics and summaries.
+Stay informed with AI-powered news insights, interactive visualizations, and personalized content from around the world.
+
+## Data Sources
+
+HN Top 500 stories filtered by AI keywords (claude, openai, gemini, chatgpt, copilot, llm, agentic, etc.) via the Firebase API.
+
+### GitHub Releases
+
+Tracked repositories:
+
+- anthropics/claude-code
+- openai/codex
+- getcursor/cursor
+- paul-gauthier/aider
+- cline/cline
+- continuedev/continue
+- google-gemini/gemini-cli
+
+### RSS Feeds
+
+- Anthropic News (scraped from anthropic.com/news)
+- OpenAI News
+- Google AI Blog (DeepMind)
+- TechCrunch AI
+- The Verge AI
+- Ars Technica AI
+- VentureBeat AI
+
+## How It Works
+
+The system continuously aggregates public AI news signals, deduplicates and scores them,
+then serves them to the dashboard for filtering, personalization, and real-time tracking.
+
+## Local Development
 
 1. Clone repo
 2. Run `python -m venv .venv`
 3. Activate: `.venv\Scripts\activate.bat`
-4. Install: `pip install -r requirements.txt`
+4. Install backend requirements: `pip install -r requirements.txt`
+5. Run API: `python src/api_server.py`
+6. Run dashboard: `cd dashboard && npm install && npm run dev`
 
-## Run Locally
+## Features
 
-1. API: `python src/api_server.py`
-2. Dashboard: `cd dashboard && npm install && npm run dev`
-3. Pipeline: `python src/orchestrator.py pipeline`
-4. Video: `python src/orchestrator.py video`
-5. Publish: `python src/orchestrator.py publish`
+### Interactive Charts
 
-## Deployment
+Visualize news trends with pie charts, bar graphs, and timeline analytics.
 
-- Full production guide: [DEPLOYMENT.md](DEPLOYMENT.md)
-- Docker API entrypoint: [Dockerfile](Dockerfile)
-- Railway backend config: [railway.json](railway.json)
-- Compose stack: [docker-compose.yml](docker-compose.yml)
-- Backend env template: [.env.example](.env.example)
-- Frontend prod env template: [dashboard/.env.production.example](dashboard/.env.production.example)
+### AI Summaries
+
+Get concise AI-powered summaries of articles using advanced language models.
+
+### Global Coverage
+
+Access news from multiple regions and filter by country, topic, and date range.
+
+### Smart Filtering
+
+Advanced search and filtering capabilities to find exactly what you need.
+
+## Tech Stack
+
+- Next.js, React, TypeScript
+- Flask + Python APIs
+- SQLite persistence
+- TanStack Query + Zustand
+- Netlify + Railway deployment
+
+## License
+
+Refer to the repository license file for usage terms.

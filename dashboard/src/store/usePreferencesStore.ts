@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 interface PreferencesState {
   refreshIntervalMinutes: number;
-  defaultRegion: 'all' | 'united_states' | 'global';
+  defaultRegion: string;
   defaultTopic: string;
   setRefreshIntervalMinutes: (minutes: number) => void;
   setDefaultRegion: (region: PreferencesState['defaultRegion']) => void;

@@ -13,6 +13,8 @@ export const TOPIC_OPTIONS = [
   { label: 'Agents', value: 'agents' },
   { label: 'Research', value: 'research' },
   { label: 'Releases', value: 'releases' },
+  { label: 'Weather', value: 'weather' },
+  { label: 'Climate', value: 'climate' },
 ];
 
 export const REGION_OPTIONS = [
@@ -26,4 +28,7 @@ export const REGION_OPTIONS = [
   { label: 'France', value: 'france' },
   { label: 'Japan', value: 'japan' },
   { label: 'Brazil', value: 'brazil' },
+  { label: 'Africa', value: 'africa' },
+  { label: 'Kenya', value: 'kenya' },
+  { label: 'Ethiopia', value: 'ethiopia' },
 ];
