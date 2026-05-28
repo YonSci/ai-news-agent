@@ -5,6 +5,7 @@ import { StatsCards } from '@/components/dashboard/StatsCards';
 import { NewsFeed } from '@/components/dashboard/NewsFeed';
 import { NewsFilters, type NewsFilterValues } from '@/components/dashboard/NewsFilters';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import type { NewsStatus } from '@/types';
 import { toast } from 'sonner';
 import { usePreferencesStore } from '@/store/usePreferencesStore';
@@ -29,16 +30,30 @@ export function DashboardPage() {
     q: '',
   });
 
-  const { data: stats, isLoading } = useQuery({
+  const {
+    data: stats,
+    isLoading,
+    isError: isStatsError,
+    error: statsError,
+    refetch: refetchStats,
+  } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: () => statsApi.getDashboard().then((res) => res.data),
     refetchInterval: refreshIntervalMinutes * 60 * 1000,
+    retry: 1,
   });
 
-  const { data: newsItems, isLoading: isNewsLoading } = useQuery({
+  const {
+    data: newsItems,
+    isLoading: isNewsLoading,
+    isError: isNewsError,
+    error: newsError,
+    refetch: refetchNews,
+  } = useQuery({
     queryKey: ['news-feed', appliedFilters],
     queryFn: () => newsApi.getAll(appliedFilters).then((res) => res.data),
     refetchInterval: refreshIntervalMinutes * 60 * 1000,
+    retry: 1,
   });
 
   const updateNewsStatus = useMutation({
@@ -76,6 +91,31 @@ export function DashboardPage() {
 
       {/* Stats */}
       <StatsCards stats={stats} />
+
+      {(isStatsError || isNewsError) && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          <p className="font-medium">Unable to fetch live data from API.</p>
+          <p className="mt-1 text-destructive/90">
+            Check Netlify environment variable VITE_API_URL and ensure it points to your Railway backend.
+          </p>
+          <p className="mt-1 text-destructive/80 text-xs break-words">
+            {String(statsError?.message || newsError?.message || 'Unknown network error')}
+          </p>
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-destructive/50 text-destructive hover:bg-destructive/20"
+              onClick={() => {
+                refetchStats();
+                refetchNews();
+              }}
+            >
+              Retry fetch
+            </Button>
+          </div>
+        </div>
+      )}
 
       <NewsFilters
         value={filters}
