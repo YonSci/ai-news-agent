@@ -36,7 +36,7 @@ export function Sidebar() {
         {sidebarOpen ? (
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-500" />
-            <span className="text-lg font-bold text-foreground">AI News Traker</span>
+            <span className="text-lg font-bold text-foreground">AI News Traker Agent</span>
           </div>
         ) : (
           <Sparkles className="w-6 h-6 text-purple-500 mx-auto" />
