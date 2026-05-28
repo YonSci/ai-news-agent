@@ -5,6 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 import { REGION_OPTIONS, TOPIC_OPTIONS } from '@/lib/news-filters';
+import {
+  getCurrentApiBaseUrl,
+  getCurrentGitHubToken,
+  getSuggestedLocalApiBaseUrl,
+  getSuggestedProductionApiBaseUrl,
+  resetApiBaseUrlToDefault,
+  setApiBaseUrl,
+  setGitHubToken,
+} from '@/lib/api';
+import { toast } from 'sonner';
 
 export function SettingsPage() {
   const refreshIntervalMinutes = usePreferencesStore((state) => state.refreshIntervalMinutes);
@@ -14,8 +24,18 @@ export function SettingsPage() {
   const setDefaultRegion = usePreferencesStore((state) => state.setDefaultRegion);
   const setDefaultTopic = usePreferencesStore((state) => state.setDefaultTopic);
 
-  const [apiUrl, setApiUrl] = useState('http://localhost:5000/api');
-  const [githubToken, setGithubToken] = useState('');
+  const [apiUrl, setApiUrlState] = useState(getCurrentApiBaseUrl());
+  const [githubToken, setGithubTokenState] = useState(getCurrentGitHubToken());
+
+  const localApiUrl = getSuggestedLocalApiBaseUrl();
+  const productionApiUrl = getSuggestedProductionApiBaseUrl();
+
+  const handleSaveConnectionSettings = () => {
+    const appliedApiUrl = setApiBaseUrl(apiUrl);
+    setGitHubToken(githubToken);
+    setApiUrlState(appliedApiUrl);
+    toast.success('Connection settings saved');
+  };
 
   return (
     <div className="space-y-6">
@@ -33,9 +53,42 @@ export function SettingsPage() {
             <label className="text-sm text-muted-foreground">Backend API URL</label>
             <Input
               value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
+              onChange={(e) => setApiUrlState(e.target.value)}
               className="bg-background border-border text-foreground"
             />
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setApiUrlState(localApiUrl)}
+              >
+                Use Local Backend
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setApiUrlState(productionApiUrl)}
+              >
+                Use Production Backend
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const restored = resetApiBaseUrlToDefault();
+                  setApiUrlState(restored);
+                  toast.success('API URL reset to default');
+                }}
+              >
+                Reset Default
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Local default: {localApiUrl} | Production default: {productionApiUrl}
+            </p>
           </div>
           <div className="space-y-1">
             <label className="text-sm text-muted-foreground">Optional GitHub Token</label>
@@ -43,14 +96,14 @@ export function SettingsPage() {
               type="password"
               placeholder="ghp_..."
               value={githubToken}
-              onChange={(e) => setGithubToken(e.target.value)}
+              onChange={(e) => setGithubTokenState(e.target.value)}
               className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <p className="text-xs text-muted-foreground">
             GitHub release feeds work without a token. A token only improves API-based enrichment.
           </p>
-          <Button className="bg-purple-600 hover:bg-purple-700">Save Changes</Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSaveConnectionSettings}>Save Changes</Button>
         </CardContent>
       </Card>
 
@@ -101,7 +154,9 @@ export function SettingsPage() {
           <p className="text-xs text-muted-foreground">
             RSS, company pages, Hacker News, and GitHub release feeds use this cadence on the dashboard.
           </p>
-          <Button className="bg-purple-600 hover:bg-purple-700">Save Preferences</Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => toast.success('Dashboard preferences saved')}>
+            Save Preferences
+          </Button>
         </CardContent>
       </Card>
     </div>

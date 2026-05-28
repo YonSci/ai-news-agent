@@ -12,6 +12,8 @@ import type {
 } from '@/types';
 
 const DEFAULT_LOCAL_API_URL = 'http://localhost:5000/api';
+const API_URL_STORAGE_KEY = 'dashboard-api-url';
+const GITHUB_TOKEN_STORAGE_KEY = 'dashboard-github-token';
 
 function normalizeApiBaseUrl(rawUrl?: string) {
   if (!rawUrl) return DEFAULT_LOCAL_API_URL;
@@ -22,7 +24,41 @@ function normalizeApiBaseUrl(rawUrl?: string) {
   return `${trimmed}/api`;
 }
 
-const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+function getEnvApiUrl() {
+  return normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+}
+
+function getStoredApiUrl() {
+  if (typeof window === 'undefined') return '';
+  return window.localStorage.getItem(API_URL_STORAGE_KEY) || '';
+}
+
+function resolveInitialApiBaseUrl() {
+  const stored = getStoredApiUrl();
+  if (stored) return normalizeApiBaseUrl(stored);
+
+  const isLocalHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if (isLocalHost) {
+    return DEFAULT_LOCAL_API_URL;
+  }
+
+  return getEnvApiUrl();
+}
+
+function getStoredGitHubToken() {
+  if (typeof window === 'undefined') return '';
+  return window.localStorage.getItem(GITHUB_TOKEN_STORAGE_KEY) || '';
+}
+
+function applyGitHubTokenHeader(token: string) {
+  if (token) {
+    api.defaults.headers.common['X-GitHub-Token'] = token;
+  } else {
+    delete api.defaults.headers.common['X-GitHub-Token'];
+  }
+}
+
+const API_BASE_URL = resolveInitialApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -30,6 +66,54 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+applyGitHubTokenHeader(getStoredGitHubToken());
+
+export function getCurrentApiBaseUrl() {
+  return api.defaults.baseURL || API_BASE_URL;
+}
+
+export function getSuggestedLocalApiBaseUrl() {
+  return DEFAULT_LOCAL_API_URL;
+}
+
+export function getSuggestedProductionApiBaseUrl() {
+  return getEnvApiUrl();
+}
+
+export function setApiBaseUrl(rawUrl: string) {
+  const normalized = normalizeApiBaseUrl(rawUrl);
+  api.defaults.baseURL = normalized;
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(API_URL_STORAGE_KEY, normalized);
+  }
+  return normalized;
+}
+
+export function resetApiBaseUrlToDefault() {
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(API_URL_STORAGE_KEY);
+  }
+  const resolved = resolveInitialApiBaseUrl();
+  api.defaults.baseURL = resolved;
+  return resolved;
+}
+
+export function getCurrentGitHubToken() {
+  return getStoredGitHubToken();
+}
+
+export function setGitHubToken(token: string) {
+  const trimmed = token.trim();
+  if (typeof window !== 'undefined') {
+    if (trimmed) {
+      window.localStorage.setItem(GITHUB_TOKEN_STORAGE_KEY, trimmed);
+    } else {
+      window.localStorage.removeItem(GITHUB_TOKEN_STORAGE_KEY);
+    }
+  }
+  applyGitHubTokenHeader(trimmed);
+}
 
 // Content API
 export const contentApi = {
