@@ -6,6 +6,7 @@ import {
   FolderKanban, 
   Calendar, 
   Settings,
+  Info,
   ChevronLeft,
   ChevronRight,
   Sparkles
@@ -20,6 +21,7 @@ const navItems = [
   { name: 'Projects', path: '/projects', icon: FolderKanban },
   { name: 'Coverage Calendar', path: '/calendar', icon: Calendar },
   { name: 'Settings', path: '/settings', icon: Settings },
+  { name: 'About', path: '/about', icon: Info },
 ];
 
 export function Sidebar() {
