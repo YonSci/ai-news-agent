@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, Goal, HandHeart, MonitorSmartphone, Rocket, Wrench } from 'lucide-react';
+import { BookOpen, Goal, HandHeart, Mail, MonitorSmartphone, Rocket, UserRound, Wrench } from 'lucide-react';
 
 const techStack = [
   'Frontend: React + TypeScript + Vite',
@@ -133,6 +133,35 @@ export function AboutPage() {
           {credits.map((item) => (
             <p key={item}>{item}</p>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <UserRound size={18} className="text-emerald-400" /> Contact Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p className="text-foreground font-medium">Contact Person: Yonas Mersha</p>
+          <p>AI Expert, International Livestock Research Institute (ILRI)</p>
+          <p>
+            LinkedIn profile:{' '}
+            <a
+              href="https://linkedin.com/in/yonas-mersha-baab561b5"
+              target="_blank"
+              rel="noreferrer"
+              className="text-cyan-400 hover:text-cyan-300 underline"
+            >
+              linkedin.com/in/yonas-mersha-baab561b5
+            </a>
+          </p>
+          <p className="flex items-center gap-2">
+            <Mail size={14} className="text-amber-400" />
+            <a href="mailto:yonas.mersha14@gmail.com" className="text-cyan-400 hover:text-cyan-300 underline">
+              yonas.mersha14@gmail.com
+            </a>
+          </p>
         </CardContent>
       </Card>
     </div>
