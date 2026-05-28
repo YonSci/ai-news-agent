@@ -174,3 +174,17 @@ export const coverageApi = {
   update: (id: string, data: Partial<CoverageEvent>) => api.patch(`/coverage/events/${id}`, data),
   delete: (id: string) => api.delete(`/coverage/events/${id}`),
 };
+
+export const integrationApi = {
+  getGitHubStatus: (token?: string) =>
+    api.get<{
+      connected: boolean;
+      source: 'none' | 'header' | 'env';
+      remaining?: number;
+      limit?: number;
+      reset?: number;
+      message: string;
+    }>('/integrations/github/status', {
+      headers: token?.trim() ? { 'X-GitHub-Token': token.trim() } : undefined,
+    }),
+};

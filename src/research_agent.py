@@ -18,14 +18,15 @@ from src.dashboard_store import sync_news_items
 
 
 class ResearchAgent:
-    def __init__(self):
+    def __init__(self, github_token: str | None = None):
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
         })
+        self.github_token = (github_token or GITHUB_TOKEN or '').strip()
         self.github_headers = {'Accept': 'application/vnd.github+json'}
-        if GITHUB_TOKEN:
-            self.github_headers['Authorization'] = f'Bearer {GITHUB_TOKEN}'
+        if self.github_token:
+            self.github_headers['Authorization'] = f'Bearer {self.github_token}'
 
     def collect_news(self, per_source_limit: int = NEWS_MAX_PER_SOURCE) -> List[Dict]:
         items: List[Dict] = []
@@ -122,7 +123,7 @@ class ResearchAgent:
             except Exception as e:
                 print(f"Error fetching GitHub releases for {label}: {e}")
 
-        if GITHUB_TOKEN:
+        if self.github_token:
             for query in NEWS_GITHUB_RELEASE_QUERIES:
                 try:
                     label = query.get('label', 'GitHub Release')

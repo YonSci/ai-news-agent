@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json
 import sqlite3
+import requests
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -70,7 +71,15 @@ def _load_news_snapshot() -> list[dict]:
         return []
 
 
-def _hydrate_news_if_empty() -> None:
+def _resolve_github_token_from_request() -> str:
+    """Safely read optional GitHub token forwarded from dashboard settings."""
+    token = (request.headers.get('X-GitHub-Token') or '').strip()
+    if token.startswith('github_pat_') or token.startswith('ghp_'):
+        return token
+    return ''
+
+
+def _hydrate_news_if_empty(github_token: str | None = None) -> None:
     """Best-effort hydration to avoid empty dashboard after cold deploys."""
     global _last_hydration_attempt
 
@@ -89,7 +98,7 @@ def _hydrate_news_if_empty() -> None:
         from src.research_agent import ResearchAgent
         from src.dashboard_store import sync_news_items
 
-        agent = ResearchAgent()
+        agent = ResearchAgent(github_token=github_token)
         items = agent.collect_news()
         if items:
             synced = sync_news_items(items)
@@ -281,7 +290,7 @@ def get_content():
 @app.route('/api/news', methods=['GET'])
 def get_news():
     """Get normalized AI news items"""
-    _hydrate_news_if_empty()
+    _hydrate_news_if_empty(github_token=_resolve_github_token_from_request())
 
     source = request.args.get('source')
     category = request.args.get('category')
@@ -662,7 +671,7 @@ def get_projects():
 @app.route('/api/stats/dashboard', methods=['GET'])
 def get_dashboard_stats():
     """Get dashboard statistics"""
-    _hydrate_news_if_empty()
+    _hydrate_news_if_empty(github_token=_resolve_github_token_from_request())
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -701,6 +710,49 @@ def get_dashboard_stats():
         'importantCount': important,
         'ignoredCount': ignored,
     })
+
+
+@app.route('/api/integrations/github/status', methods=['GET'])
+def github_integration_status():
+    """Validate whether GitHub token is usable for API-backed enrichment."""
+    token = _resolve_github_token_from_request() or (GITHUB_TOKEN or '').strip()
+    if not token:
+        return jsonify({
+            'connected': False,
+            'source': 'none',
+            'message': 'No GitHub token configured',
+        })
+
+    headers = {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': f'Bearer {token}',
+    }
+    try:
+        response = requests.get('https://api.github.com/rate_limit', headers=headers, timeout=15)
+        payload = response.json() if response.content else {}
+
+        if response.status_code >= 400:
+            return jsonify({
+                'connected': False,
+                'source': 'header' if _resolve_github_token_from_request() else 'env',
+                'message': payload.get('message', 'GitHub token validation failed'),
+            }), 200
+
+        core = payload.get('resources', {}).get('core', {})
+        return jsonify({
+            'connected': True,
+            'source': 'header' if _resolve_github_token_from_request() else 'env',
+            'remaining': core.get('remaining'),
+            'limit': core.get('limit'),
+            'reset': core.get('reset'),
+            'message': 'GitHub token is valid',
+        })
+    except Exception as exc:
+        return jsonify({
+            'connected': False,
+            'source': 'header' if _resolve_github_token_from_request() else 'env',
+            'message': f'GitHub token check failed: {exc}',
+        }), 200
 
 
 @app.route('/api/health/hydration', methods=['GET'])

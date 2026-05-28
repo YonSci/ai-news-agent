@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { REGION_OPTIONS, TOPIC_OPTIONS } from '@/lib/news-filters';
 import {
   getCurrentGitHubToken,
+  integrationApi,
   setGitHubToken,
 } from '@/lib/api';
 import { toast } from 'sonner';
@@ -20,9 +21,30 @@ export function SettingsPage() {
   const setDefaultTopic = usePreferencesStore((state) => state.setDefaultTopic);
 
   const [githubToken, setGithubTokenState] = useState(getCurrentGitHubToken());
+  const [testingToken, setTestingToken] = useState(false);
   const handleSaveConnectionSettings = () => {
     setGitHubToken(githubToken);
     toast.success('GitHub token saved');
+  };
+
+  const handleTestToken = async () => {
+    try {
+      setTestingToken(true);
+      const response = await integrationApi.getGitHubStatus(githubToken);
+      if (response.data.connected) {
+        const remaining = typeof response.data.remaining === 'number'
+          ? ` (${response.data.remaining}/${response.data.limit} remaining)`
+          : '';
+        toast.success(`GitHub token is valid${remaining}`);
+      } else {
+        toast.error(response.data.message || 'GitHub token is not valid');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Token test failed';
+      toast.error(message);
+    } finally {
+      setTestingToken(false);
+    }
   };
 
   return (
@@ -50,7 +72,14 @@ export function SettingsPage() {
           <p className="text-xs text-muted-foreground">
             GitHub release feeds work without a token. A token only improves API-based enrichment.
           </p>
-          <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSaveConnectionSettings}>Save Token</Button>
+          <div className="flex items-center gap-2">
+            <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSaveConnectionSettings}>
+              Save Token
+            </Button>
+            <Button variant="outline" onClick={handleTestToken} disabled={testingToken}>
+              {testingToken ? 'Testing...' : 'Test Token'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

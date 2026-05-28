@@ -35,12 +35,12 @@ export function AboutPage() {
             About
           </Badge>
           <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-300">
-            AI News Traker
+            AI News Traker Agent
           </Badge>
         </div>
         <h1 className="text-2xl font-bold text-foreground">About This Dashboard</h1>
         <p className="text-muted-foreground max-w-3xl">
-          AI News Traker is a production-oriented monitoring dashboard for AI news discovery, prioritization, and planning.
+          AI News Traker Agent is a production-oriented monitoring dashboard for AI news discovery, prioritization, and planning.
           It helps teams quickly turn high-signal updates into actionable content and project decisions.
         </p>
       </div>
