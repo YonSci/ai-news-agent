@@ -4,6 +4,7 @@ Serves data from your AI News Agent files
 """
 import sys
 from collections import Counter
+from threading import Lock
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -28,6 +29,100 @@ TOPIC_STOPWORDS = {
     'ai', 'news', 'company', 'release', 'releases', 'github', 'openai', 'anthropic',
     'google', 'deepmind', 'hackernews', 'hacker news', 'techcrunch ai', 'ars technica ai',
 }
+
+_hydration_lock = Lock()
+_last_hydration_attempt: datetime | None = None
+_NEWS_SNAPSHOT_PATH = DATA_DIR / 'news_snapshot.json'
+
+
+def _get_news_row_count() -> int:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM content_items WHERE (item_type = 'news' OR platform = 'news')")
+    count = c.fetchone()[0]
+    conn.close()
+    return int(count or 0)
+
+
+def _save_news_snapshot(items: list[dict]) -> None:
+    """Persist latest collected news so cold starts can recover quickly."""
+    if not items:
+        return
+    try:
+        _NEWS_SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _NEWS_SNAPSHOT_PATH.write_text(json.dumps(items), encoding='utf-8')
+    except Exception as exc:
+        print(f"Dashboard snapshot save failed: {exc}")
+
+
+def _load_news_snapshot() -> list[dict]:
+    """Load previously collected news items from local snapshot."""
+    try:
+        if not _NEWS_SNAPSHOT_PATH.exists():
+            return []
+        raw = _NEWS_SNAPSHOT_PATH.read_text(encoding='utf-8')
+        data = json.loads(raw)
+        if isinstance(data, list):
+            return data
+        return []
+    except Exception as exc:
+        print(f"Dashboard snapshot load failed: {exc}")
+        return []
+
+
+def _hydrate_news_if_empty() -> None:
+    """Best-effort hydration to avoid empty dashboard after cold deploys."""
+    global _last_hydration_attempt
+
+    if _get_news_row_count() > 0:
+        return
+
+    now = datetime.now()
+    if _last_hydration_attempt and (now - _last_hydration_attempt) < timedelta(minutes=1):
+        return
+
+    if not _hydration_lock.acquire(blocking=False):
+        return
+
+    _last_hydration_attempt = now
+    try:
+        from src.research_agent import ResearchAgent
+        from src.dashboard_store import sync_news_items
+
+        agent = ResearchAgent()
+        items = agent.collect_news()
+        if items:
+            synced = sync_news_items(items)
+            print(f"Dashboard auto-hydration saved {synced} news items")
+            if synced > 0:
+                _save_news_snapshot(items)
+        else:
+            print("Dashboard auto-hydration collected 0 items")
+
+        if _get_news_row_count() == 0:
+            snapshot_items = _load_news_snapshot()
+            if snapshot_items:
+                restored = sync_news_items(snapshot_items)
+                print(f"Dashboard auto-hydration restored {restored} news items from snapshot")
+            else:
+                print("Dashboard auto-hydration snapshot fallback unavailable")
+    except Exception as exc:
+        print(f"Dashboard auto-hydration failed: {exc}")
+
+        if _get_news_row_count() == 0:
+            try:
+                from src.dashboard_store import sync_news_items
+
+                snapshot_items = _load_news_snapshot()
+                if snapshot_items:
+                    restored = sync_news_items(snapshot_items)
+                    print(f"Dashboard auto-hydration recovered {restored} news items from snapshot after error")
+                else:
+                    print("Dashboard auto-hydration snapshot fallback unavailable after error")
+            except Exception as snapshot_exc:
+                print(f"Dashboard snapshot recovery failed: {snapshot_exc}")
+    finally:
+        _hydration_lock.release()
 
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
@@ -96,6 +191,8 @@ def get_content():
 @app.route('/api/news', methods=['GET'])
 def get_news():
     """Get normalized AI news items"""
+    _hydrate_news_if_empty()
+
     source = request.args.get('source')
     category = request.args.get('category')
     status = request.args.get('status')
@@ -380,6 +477,8 @@ def get_projects():
 @app.route('/api/stats/dashboard', methods=['GET'])
 def get_dashboard_stats():
     """Get dashboard statistics"""
+    _hydrate_news_if_empty()
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
