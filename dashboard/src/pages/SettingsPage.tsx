@@ -6,12 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState } from 'react';
 import { REGION_OPTIONS, TOPIC_OPTIONS } from '@/lib/news-filters';
 import {
-  getCurrentApiBaseUrl,
   getCurrentGitHubToken,
-  getSuggestedLocalApiBaseUrl,
-  getSuggestedProductionApiBaseUrl,
-  resetApiBaseUrlToDefault,
-  setApiBaseUrl,
   setGitHubToken,
 } from '@/lib/api';
 import { toast } from 'sonner';
@@ -24,17 +19,10 @@ export function SettingsPage() {
   const setDefaultRegion = usePreferencesStore((state) => state.setDefaultRegion);
   const setDefaultTopic = usePreferencesStore((state) => state.setDefaultTopic);
 
-  const [apiUrl, setApiUrlState] = useState(getCurrentApiBaseUrl());
   const [githubToken, setGithubTokenState] = useState(getCurrentGitHubToken());
-
-  const localApiUrl = getSuggestedLocalApiBaseUrl();
-  const productionApiUrl = getSuggestedProductionApiBaseUrl();
-
   const handleSaveConnectionSettings = () => {
-    const appliedApiUrl = setApiBaseUrl(apiUrl);
     setGitHubToken(githubToken);
-    setApiUrlState(appliedApiUrl);
-    toast.success('Connection settings saved');
+    toast.success('GitHub token saved');
   };
 
   return (
@@ -46,50 +34,9 @@ export function SettingsPage() {
 
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-foreground">Dashboard API</CardTitle>
+          <CardTitle className="text-foreground">GitHub Integration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Backend API URL</label>
-            <Input
-              value={apiUrl}
-              onChange={(e) => setApiUrlState(e.target.value)}
-              className="bg-background border-border text-foreground"
-            />
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setApiUrlState(localApiUrl)}
-              >
-                Use Local Backend
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setApiUrlState(productionApiUrl)}
-              >
-                Use Production Backend
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const restored = resetApiBaseUrlToDefault();
-                  setApiUrlState(restored);
-                  toast.success('API URL reset to default');
-                }}
-              >
-                Reset Default
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Local default: {localApiUrl} | Production default: {productionApiUrl}
-            </p>
-          </div>
           <div className="space-y-1">
             <label className="text-sm text-muted-foreground">Optional GitHub Token</label>
             <Input
@@ -103,7 +50,7 @@ export function SettingsPage() {
           <p className="text-xs text-muted-foreground">
             GitHub release feeds work without a token. A token only improves API-based enrichment.
           </p>
-          <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSaveConnectionSettings}>Save Changes</Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSaveConnectionSettings}>Save Token</Button>
         </CardContent>
       </Card>
 
