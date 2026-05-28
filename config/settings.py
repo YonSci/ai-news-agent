@@ -61,6 +61,9 @@ NEWS_RSS_FEEDS = {
     "openai": "https://openai.com/index/rss.xml",
     "anthropic": "https://www.anthropic.com/news/rss.xml",
     "google_deepmind": "https://deepmind.google/discover/blog/rss.xml",
+    "google_ai_blog": "https://blog.google/technology/ai/rss/",
+    "nvidia_blog": "https://blogs.nvidia.com/feed/",
+    "nvidia_developer_blog": "https://developer.nvidia.com/blog/feed/",
     "techcrunch_ai": "https://techcrunch.com/tag/artificial-intelligence/feed/",
     "ars_technica_ai": "https://arstechnica.com/tag/artificial-intelligence/feed/",
 }
@@ -69,6 +72,9 @@ NEWS_COMPANY_PAGES = {
     "openai": "https://openai.com/news/",
     "anthropic": "https://www.anthropic.com/news",
     "google_deepmind": "https://deepmind.google/discover/blog/",
+    "google_ai_blog": "https://blog.google/technology/ai/",
+    "nvidia_blog": "https://blogs.nvidia.com/blog/category/ai/",
+    "nvidia_developer_blog": "https://developer.nvidia.com/blog/",
 }
 
 NEWS_HN_KEYWORDS = [
@@ -78,6 +84,9 @@ NEWS_HN_KEYWORDS = [
     "openai",
     "anthropic",
     "deepmind",
+    "nvidia",
+    "tensorrt",
+    "nemo",
     "claude",
     "codex",
     "cursor",
@@ -88,6 +97,8 @@ NEWS_GITHUB_RELEASE_QUERIES = [
     {"label": "Claude Code", "query": "claude code in:name,description"},
     {"label": "OpenAI Codex", "query": "codex openai in:name,description"},
     {"label": "Cursor", "query": "cursor ai in:name,description"},
+    {"label": "Google DeepMind", "query": "google deepmind ai in:name,description"},
+    {"label": "NVIDIA AI", "query": "nvidia ai in:name,description"},
     {"label": "AI Coding Tools", "query": "ai coding in:name,description"},
 ]
 
@@ -95,6 +106,9 @@ NEWS_GITHUB_RELEASE_FEEDS = {
     "OpenAI Python": "https://github.com/openai/openai-python/releases.atom",
     "Anthropic SDK": "https://github.com/anthropics/anthropic-sdk-python/releases.atom",
     "Google Gen AI": "https://github.com/googleapis/python-genai/releases.atom",
+    "Google DeepMind AlphaFold": "https://github.com/google-deepmind/alphafold/releases.atom",
+    "NVIDIA TensorRT": "https://github.com/NVIDIA/TensorRT/releases.atom",
+    "NVIDIA NeMo": "https://github.com/NVIDIA/NeMo/releases.atom",
     "Hugging Face Transformers": "https://github.com/huggingface/transformers/releases.atom",
     "Microsoft AutoGen": "https://github.com/microsoft/autogen/releases.atom",
 }

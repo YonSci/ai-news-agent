@@ -24,6 +24,7 @@ function App() {
   const theme = useDashboardStore((state) => state.theme);
 
   useEffect(() => {
+    document.title = 'AI News Traker Agent';
     const root = document.documentElement;
     root.classList.toggle('light', theme === 'light');
     root.classList.toggle('dark', theme === 'dark');

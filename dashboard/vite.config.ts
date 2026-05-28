@@ -5,6 +5,12 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [
+    {
+      name: 'app-title-transform',
+      transformIndexHtml(html) {
+        return html.replace(/<title>.*?<\/title>/i, '<title>AI News Traker Agent</title>');
+      },
+    },
     react(),
     tailwindcss(),
   ],
