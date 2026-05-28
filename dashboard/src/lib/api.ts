@@ -1,7 +1,11 @@
 import axios from 'axios';
 import type { ContentItem, ContentStatus, TrendingTopic, Project, DashboardStats, NewsItem, NewsStatus } from '@/types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const DEFAULT_LOCAL_API_URL = 'http://localhost:5000/api';
+const DEFAULT_PROD_API_URL = 'https://ai-news-api-production-9a3f.up.railway.app/api';
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API_URL : DEFAULT_LOCAL_API_URL);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

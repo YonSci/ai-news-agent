@@ -28,6 +28,12 @@ export function TopBar() {
   } = useDashboardStore();
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const handleLogout = () => {
+    localStorage.removeItem('dashboard-storage');
+    toast.success('Logged out successfully.');
+    window.location.href = '/';
+  };
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) return timestamp;
@@ -177,7 +183,10 @@ export function TopBar() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Admin</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => toast.info('Profile settings are coming soon.')}>Profile</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => navigate('/settings')}>
+                <User size={14} />
+                Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate('/settings')}>
                 <Settings size={14} />
                 Settings
@@ -189,7 +198,7 @@ export function TopBar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                onSelect={() => toast.info('Logout is not connected yet.')}
+                onSelect={handleLogout}
               >
                 <LogOut size={14} />
                 Logout
