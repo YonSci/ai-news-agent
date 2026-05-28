@@ -3,7 +3,6 @@ import {
   LayoutDashboard, 
   TrendingUp, 
   ClipboardList, 
-  Calendar, 
   Settings,
   Info,
   ChevronLeft,
@@ -17,7 +16,6 @@ const navItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'News Signals', path: '/trending', icon: TrendingUp },
   { name: 'News Queue', path: '/workflow', icon: ClipboardList },
-  { name: 'Coverage Calendar', path: '/calendar', icon: Calendar },
   { name: 'Settings', path: '/settings', icon: Settings },
   { name: 'About', path: '/about', icon: Info },
 ];

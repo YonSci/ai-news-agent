@@ -16,7 +16,7 @@ const usageSteps = [
   'Open Dashboard to track live story volume and relevance.',
   'Use News Filters to narrow by topic, region, dates, and keywords.',
   'Review Live AI News Feed and triage stories as tracked, important, or ignored.',
-  'Use News Signals, News Queue, and Coverage Calendar for planning.',
+  'Use News Signals and News Queue for planning and prioritization.',
   'Check the backend hydration health status to confirm data reliability.',
 ];
 
