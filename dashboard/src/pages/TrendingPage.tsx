@@ -6,6 +6,15 @@ import { ViralScoreChart } from '@/components/trending/ViralScoreChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePreferencesStore } from '@/store/usePreferencesStore';
+import { Info } from 'lucide-react';
+
+function InfoHint({ text }: { text: string }) {
+  return (
+    <span className="inline-flex align-middle" title={text} aria-label={text}>
+      <Info size={14} className="text-muted-foreground hover:text-foreground cursor-help" />
+    </span>
+  );
+}
 
 export function TrendingPage() {
   const refreshIntervalMinutes = usePreferencesStore((state) => state.refreshIntervalMinutes);
@@ -14,6 +23,14 @@ export function TrendingPage() {
     queryFn: () => trendingApi.getTopics().then((res) => res.data),
     refetchInterval: refreshIntervalMinutes * 60 * 1000,
   });
+
+  const trackedSources = topics
+    ? new Set(topics.flatMap((topic) => topic.sources || [])).size
+    : 0;
+
+  const averageMomentum = topics && topics.length
+    ? Math.round(topics.reduce((sum, topic) => sum + topic.growth, 0) / topics.length)
+    : 0;
 
   if (isLoading) {
     return (
@@ -39,8 +56,11 @@ export function TrendingPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Top Theme</CardTitle>
-            <p className="text-sm text-muted-foreground">Most mentioned in the latest feed</p>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              Top Theme
+              <InfoHint text="The strongest topic right now, ranked by combined volume and growth." />
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Most dominant topic right now based on volume and trend</p>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-foreground">{topics?.[0]?.keyword || 'None yet'}</p>
@@ -49,34 +69,55 @@ export function TrendingPage() {
         </Card>
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Tracked Sources</CardTitle>
-            <p className="text-sm text-muted-foreground">Unique source domains represented</p>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              Tracked Sources
+              <InfoHint text="How many distinct source channels are contributing to active themes." />
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Unique source channels currently contributing to signals</p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">{topics?.length || 0}</p>
-            <p className="mt-2 text-sm text-muted-foreground">Themes derived from real news items</p>
+            <p className="text-2xl font-bold text-foreground">{trackedSources}</p>
+            <p className="mt-2 text-sm text-muted-foreground">Counted from all active themes in this view</p>
           </CardContent>
         </Card>
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Momentum</CardTitle>
-            <p className="text-sm text-muted-foreground">Average growth across themes</p>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              Momentum
+              <InfoHint text="Average growth rate across all visible themes." />
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Average movement across all active themes</p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">
-              {topics && topics.length ? Math.round(topics.reduce((sum, topic) => sum + topic.growth, 0) / topics.length) : 0}%
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">Positive and negative motion combined</p>
+            <p className="text-2xl font-bold text-foreground">{averageMomentum}%</p>
+            <p className="mt-2 text-sm text-muted-foreground">Positive means acceleration, negative means cooldown</p>
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-foreground flex items-center gap-2">
+            How To Read This Page
+            <InfoHint text="Quick glossary for reading signal and trend metrics." />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-2 text-sm text-muted-foreground md:grid-cols-3">
+          <p><span className="text-foreground font-medium">Volume:</span> how often a theme appears in your news feed.</p>
+          <p><span className="text-foreground font-medium">Growth:</span> how fast a theme is rising or falling recently.</p>
+          <p><span className="text-foreground font-medium">Sentiment:</span> estimated quality signal from relevance scores.</p>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Heatmap */}
         <Card className="lg:col-span-2 bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Signal Heatmap</CardTitle>
-            <p className="text-sm text-muted-foreground">Volume versus growth across AI categories</p>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              Signal Heatmap
+              <InfoHint text="Bubble chart where x=volume, y=growth, size=movement strength, color=sentiment." />
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Each bubble is a topic. Right = bigger, Up = growing faster.</p>
           </CardHeader>
           <CardContent>
             <TrendingHeatmap topics={topics || []} />
@@ -86,8 +127,11 @@ export function TrendingPage() {
         {/* Viral Score Distribution */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Relevance Distribution</CardTitle>
-            <p className="text-sm text-muted-foreground">How strongly current topics score across the feed</p>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              Growth Distribution
+              <InfoHint text="Bar comparison of trend change percentages for the top visible themes." />
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Quick comparison of which themes are climbing or cooling</p>
           </CardHeader>
           <CardContent>
             <ViralScoreChart topics={topics || []} />
@@ -98,7 +142,11 @@ export function TrendingPage() {
       {/* Topic List */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-foreground">Active Themes</CardTitle>
+          <CardTitle className="text-foreground flex items-center gap-2">
+            Active Themes
+            <InfoHint text="Topic list sorted by fastest growth, with volume and sentiment indicators." />
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Ranked by fastest growth so you can spot momentum first</p>
         </CardHeader>
         <CardContent>
           <TopicList topics={topics || []} />

@@ -33,7 +33,7 @@ export function ViralScoreChart({ topics }: Props) {
             fontSize: '12px',
           }}
         />
-        <Bar dataKey="growth" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Growth %" />
+        <Bar dataKey="growth" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Trend Change %" />
       </BarChart>
     </ResponsiveContainer>
   );
